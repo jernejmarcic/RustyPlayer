@@ -1,0 +1,12 @@
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/microfft-ea377a0a92250024.rmeta: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/complex.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/inverse.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/real.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/cfft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/ifft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/rfft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/tables.rs
+
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/microfft-ea377a0a92250024.d: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/complex.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/inverse.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/real.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/cfft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/ifft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/rfft.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/tables.rs
+
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/lib.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/complex.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/inverse.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/real.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/cfft.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/ifft.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/impls/rfft.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/microfft-0.5.1/src/tables.rs:

@@ -1,0 +1,11 @@
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/tinyvec-3b54e65ec8c7974d.rmeta: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array/generated_impl.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec_drain.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/slicevec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/tinyvec.rs
+
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/tinyvec-3b54e65ec8c7974d.d: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array/generated_impl.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec_drain.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/slicevec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/tinyvec.rs
+
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/lib.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/array/generated_impl.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/arrayvec_drain.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/slicevec.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/tinyvec-1.6.0/src/tinyvec.rs:

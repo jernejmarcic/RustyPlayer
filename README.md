@@ -1,2 +1,6 @@
 # Rustyplayer
- A dead simple music player written in Rust
+ A dead simple (still barely functional) music player written in Rust
+
+## Features
+ [ x ] Plays music
+

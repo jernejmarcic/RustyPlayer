@@ -1,0 +1,11 @@
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/arrayvec-f438bb2cbc14079c.rmeta: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec_impl.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/array_string.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/char.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/errors.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/utils.rs
+
+/home/jernej/CLionProjects/rustyplayer/target/debug/deps/arrayvec-f438bb2cbc14079c.d: /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/lib.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec_impl.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/array_string.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/char.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/errors.rs /home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/utils.rs
+
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/lib.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec_impl.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/arrayvec.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/array_string.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/char.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/errors.rs:
+/home/jernej/.cargo/registry/src/index.crates.io-6f17d22bba15001f/arrayvec-0.7.4/src/utils.rs:
