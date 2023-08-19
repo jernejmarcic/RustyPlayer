@@ -20,7 +20,6 @@
 - [ ] mpris support
 - [x] Album art
 - [ ] Audio visualizer
-- [ ] Previous button
 
 ### Planned Features
 
