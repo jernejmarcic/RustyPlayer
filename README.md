@@ -43,5 +43,3 @@
  - As of yet the code will only run on linux (due to the dependancies), however without image displaying it could run on Mac and Windows too (in theory)
 
 
---- DO NOT REPORT THIS TO PAPER - THIS IS NOT A BUG OR A CRASH  - git-Paper-129 (MC: 1.20.1) ---
-[11:07:21 ERROR]: The server has not responded for 16 seconds! Creating thread dump
