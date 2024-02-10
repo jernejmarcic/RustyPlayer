@@ -1,77 +1,96 @@
-use clap::Command; // Updated from `clap::App` to `clap::Command`
-use clap::Arg;
-use rand::seq::SliceRandom; // Ensure `rand` is added to your `Cargo.toml`
-use serde::{Serialize, Deserialize};
-use serde_json::Result as JsonResult;
-use std::fs;
-use std::io::BufReader;
-use std::path::PathBuf;
+
+
+mod music_play; // Note: Use an underscore in the module name
+
+use music_play::play_random_song; // Use functions from the music-play module
+
+
+use std::{
+    fs,
+    io::{BufReader, Write, Result, Read},
+    path::PathBuf,
+    env,
+    sync::mpsc,
+    thread,
+    time::Duration
+};
 use std::fs::File;
 use walkdir::WalkDir;
+use rand::Rng;
 use rodio::{Decoder, OutputStream, Sink};
-
-const CONFIG_FILE_PATH: &str = "/path/to/your/music_player.conf";
+use serde::{Deserialize, Serialize};
+use serde_json;
 
 #[derive(Serialize, Deserialize)]
-struct Config {
+struct MusicConfig {
     music_directory: String,
+    music_list: Vec<String>,
 }
 
-fn main() -> JsonResult<()> {
-    let matches = Command::new("Music Player") // Updated to `Command::new`
-        .arg(Arg::new("directory")
-            .help("Sets the music directory")
-            .required(true)
-            .index(1)) // Positional argument remains the same
-        .get_matches();
+fn main() -> Result<()> {
+    println!("Program started");
 
-    let music_dir = matches.get_one::<String>("directory").expect("required argument"); // Updated to `get_one`
-
-    let config_path = PathBuf::from(CONFIG_FILE_PATH);
-    save_path_to_config(&config_path, music_dir)?;
-
-    let music_files = find_music_files(PathBuf::from(music_dir))?;
-    play_music_randomly(music_files)?;
-
-    Ok(())
-}
-
-fn save_path_to_config(config_path: &PathBuf, path: &str) -> JsonResult<()> {
-    let config = Config {
-        music_directory: path.to_string(),
+    let args: Vec<String> = env::args().collect();
+    let mut music_config = if args.len() > 1 {
+        let music_directory = &args[1];
+        update_config(music_directory)?
+    } else {
+        read_music_config()?
     };
-    fs::write(config_path, serde_json::to_string(&config)?)?;
+
+    if music_config.music_list.is_empty() {
+        println!("Updating music list from directory");
+        music_config.music_list = music_array(&music_config.music_directory)?;
+        save_music_config(&music_config)?;
+    }
+
+    println!("Music directory set to: {}", music_config.music_directory);
+    // println!("Music list contains: {:?}", music_config.music_list);
+
+    play_random_song(&music_config.music_list)?;
+
+    println!("Main function completed");
     Ok(())
 }
 
-fn find_music_files(path: PathBuf) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-    let mut music_files = Vec::new();
-    for entry in WalkDir::new(path).into_iter().filter_map(|e| e.ok()) {
-        if entry.file_type().is_file() {
-            music_files.push(entry.into_path());
+fn update_config(music_path: &str) -> Result<MusicConfig> {
+    let music_list = music_array(music_path)?;
+    let music_config = MusicConfig {
+        music_directory: music_path.to_string(),
+        music_list,
+    };
+    save_music_config(&music_config)?;
+    Ok(music_config)
+}
+
+fn save_music_config(music_config: &MusicConfig) -> Result<()> {
+    let config_path = "music_array.conf";
+    let config_string = serde_json::to_string(music_config)?;
+    fs::write(config_path, config_string)?;
+    Ok(())
+}
+
+fn read_music_config() -> Result<MusicConfig> {
+    let config_path = "music_array.conf";
+    match fs::read_to_string(config_path) {
+        Ok(config_string) => {
+            let music_config: MusicConfig = serde_json::from_str(&config_string)?;
+            Ok(music_config)
+        },
+        Err(_) => Ok(MusicConfig {
+            music_directory: String::new(),
+            music_list: Vec::new(),
+        }),
+    }
+}
+
+fn music_array(music_path: &str) -> Result<Vec<String>> {
+    let mut music_list = Vec::new();
+    for entry in WalkDir::new(music_path).into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path();
+        if path.is_file() {
+            music_list.push(path.to_string_lossy().into_owned());
         }
     }
-    Ok(music_files)
-}
-
-fn play_music_randomly(files: Vec<PathBuf>) -> Result<(), Box<dyn std::error::Error>> {
-    let mut rng = rand::thread_rng();
-    let mut shuffled_files = files.clone();
-    shuffled_files.shuffle(&mut rng);
-
-    for file_path in shuffled_files {
-        play_audio(file_path)?;
-    }
-
-    Ok(())
-}
-
-fn play_audio(audio_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
-    let (_stream, stream_handle) = OutputStream::try_default()?;
-    let file = BufReader::new(File::open(audio_path)?);
-    let source = Decoder::new(file)?;
-    let sink = Sink::try_new(&stream_handle)?;
-    sink.append(source);
-    sink.sleep_until_end();
-    Ok(())
+    Ok(music_list)
 }
