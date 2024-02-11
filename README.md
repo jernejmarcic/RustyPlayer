@@ -3,7 +3,7 @@
 
 ## Dependancies
 `chafa` for displaying images in the terminal
- terminal compatible with chafa (`kitty` works)
+ terminal compatible with chafa (`kitty`, `konsole`)
 `metaflac` for fetching the cover image (and the lyrics in the future)
 `rust` obviously
 
@@ -17,7 +17,7 @@
 - [x] Repeat
 - [ ] Previous song (the foundaton exists)
 - [x] Lopping
-- [ ] mpris support
+- [ ] MPRIS support
 - [x] Album art
 - [ ] Audio visualizer
 
