@@ -1,6 +1,6 @@
 
 
-mod music_play; // Note: Use an underscore in the module name
+mod music_play; // Note: Use an underscore in the module nam
 
 use music_play::play_random_song; // Use functions from the music-play module
 

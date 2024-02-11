@@ -151,21 +151,4 @@ fn display_image_as_ascii(image_path: &str) -> Result<(), std::io::Error> {
     }
 }
 
-fn extract_cover_from_flac(flac_path: &Path) -> Result<(), std::io::Error> {
-    let output_path = "cover.jpg"; // You can customize this
-    let output = Command::new("metaflac")
-        .arg("--export-picture-to")
-        .arg(output_path)
-        .arg(flac_path)
-        .output()?;
-
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Failed to extract album cover",
-        ))
-    }
-}
 
