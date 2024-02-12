@@ -25,8 +25,10 @@ fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
 }
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false); // Start in a play state
+static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
+
 
 pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
     if music_list.is_empty() {
@@ -42,6 +44,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
     loop {
 
         let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+
         let randint = rng.gen_range(0..music_list.len());
 
         // Your actual logic goes here.
@@ -97,7 +100,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
             .attach(
                 move |event: MediaControlEvent| match event {
                 MediaControlEvent::Play => {
-                   // println!("Play event received");
+                    // println!("Pause/Play event received via MPRIS");
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
@@ -110,14 +113,14 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
 
                 },
                 MediaControlEvent::Toggle => {
-                 //   println!("Toggle event recieved");
+                   // println!("Toggle event received via MPRIS");
                     // Toggle logic here
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
 
                 MediaControlEvent::Next => {
-                //    println!("Next event received");
+                   // println!("Next event received via MPRIS");
                     // Logic to skip to the next track
                     // You might need to signal your playback loop to move to the next song
                     SHOULD_SKIP.store(true, Ordering::SeqCst);
@@ -125,7 +128,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
                 },
 
                 MediaControlEvent::Previous => {
-                    println!("Previous button clicked");
+                   // println!("Previous button clicked");
                     // TODO: Well make it work. LOL
                     // If only it was not so FUCKING HARD.
 
@@ -154,11 +157,18 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
         while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) {
             // Check and handle play/pause state...
             let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
-            if current_paused_state {
-                sink.pause();
-            } else {
-                sink.play();
+            if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
+                if current_paused_state {
+                    sink.pause();
+                   // println!("Paused");
+                } else if !current_paused_state {  // Changed from 'else' to 'else if' to explicitly check the condition
+                    sink.play();
+                   // println!("Play");
+                }
+                // Update the last paused state to the current state
+                LAST_PAUSED_STATE.store(current_paused_state, Ordering::SeqCst);
             }
+
 
             thread::sleep(Duration::from_millis(100));
         }
@@ -204,7 +214,7 @@ fn extract_cover_from_flac(flac_path: &String) -> Result<(), std::io::Error> {
 fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error> {
     let output = Command::new("chafa")
         .arg("-s")
-        .arg("80x25") // Adjust the size as necessary
+        .arg("90x35") // Adjust the size as necessary
         .arg(image_path)
         .output()?;
 
@@ -220,6 +230,7 @@ fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error>
 }
 
 fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String) {
+    clearscreen::clear().expect("failed to clear screen");
     let flac_checker = ".flac";
 
 
