@@ -1,3 +1,12 @@
+/*
+################################################################################
+#                                                                              #
+#  THIS IS THE OLD CODE THAT IS NO LONGER USED, ITS ONLY HERE OR ARCHIVING     #
+#  AND/OR BECAUSE I AM TOO LAZY TO DELETE IT                                   #
+#                                                                              #
+################################################################################
+*/
+
 use audiotags::Tag;
 use rand::rngs::ThreadRng;
 use rand::Rng;

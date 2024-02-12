@@ -9,14 +9,20 @@ use std::{fs::File,
                  atomic::{AtomicBool, Ordering}},
           thread
 };
+use std::io::Write;
 use std::thread::sleep;
 use rand::Rng;
 use rodio::{Decoder, OutputStream, Sink};
-use audiotags::Tag;
+use audiotags::{MimeType, Tag};
 // use termion::event::{Key, parse_event};
 // use dbus::{blocking::Connection, channel::MatchingReceiver, message::MatchRule};
 // use dbus::blocking::stdintf::org_freedesktop_dbus::EmitsChangedSignal::False;
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
+
+
+fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
+    option_seconds.map(|secs| Duration::from_secs_f64(secs))
+}
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false); // Start in a play state
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
@@ -29,7 +35,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
     }
 
     let mut rng = rand::thread_rng();
-    let mut played_songs = Vec::new();
+    let played_songs = Arc::new(Mutex::new(Vec::new()));
 
     let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
 
@@ -39,7 +45,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
         let randint = rng.gen_range(0..music_list.len());
 
         // Your actual logic goes here.
-        played_songs.push(randint);  // Track played songs
+        played_songs.lock().unwrap().push(randint);  // Track played songs
         println!("Playing song: {}", music_list[randint]);
      //   println!("Played songs index: {:?}", played_songs);
         // Get a output stream handle to the default physical sound device
@@ -49,6 +55,8 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
         let tag = Tag::new().read_from_path(&music_list[randint]).unwrap();
         let title = tag.title().unwrap_or_else(|| "Unknown".into());
         let album_cover = tag.album_cover();
+        let duration_seconds: Option<f64> = tag.duration();  // Example duration in seconds
+        let duration: Option<Duration> = convert_to_duration(duration_seconds);
         let artists = tag
             .artists()
             .map(|a| a.join(", "))
@@ -84,52 +92,50 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
         let mut controls = MediaControls::new(config).unwrap();
 
         // The closure must be Send and have a static lifetime.
+        let played_songs_clone = Arc::clone(&played_songs);
         controls
             .attach(
                 move |event: MediaControlEvent| match event {
                 MediaControlEvent::Play => {
-                    println!("Play event received");
+                   // println!("Play event received");
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
 
                 MediaControlEvent::Pause => {
-                    println!("Pause event received");
+                 //   println!("Pause event received");
                     // Logic to pause the music
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
 
                 },
                 MediaControlEvent::Toggle => {
-                    println!("Toggle event recieved");
+                 //   println!("Toggle event recieved");
                     // Toggle logic here
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
 
                 MediaControlEvent::Next => {
-                    println!("Next event received");
+                //    println!("Next event received");
                     // Logic to skip to the next track
                     // You might need to signal your playback loop to move to the next song
                     SHOULD_SKIP.store(true, Ordering::SeqCst);
 
                 },
-                    MediaControlEvent::Previous => {
-                        println!("Previous button clicked");
-                        if played_songs_clone.len() >= 2 {
-                            let previous_index = played_songs_clone[played_songs_clone.len() - 2];
 
-                            // Call play_previous_track with the index of the previous song
-                            play_previous_track(previous_index, &music_list_clone, &sink);
-                        } else {
-                            println!("No previous song to play or it's the first song.");
-                        }
-                    },
+                MediaControlEvent::Previous => {
+                    println!("Previous button clicked");
+                    // TODO: Well make it work. LOL
+                    // If only it was not so FUCKING HARD.
+
+                },
+
+
                 // Add more event handlers as needed
                 _ => println!("Event received: {:?}", event),
             })
             .unwrap();
-
 
 
         // Update the media metadata.
@@ -138,9 +144,8 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
                 title: Some(title),
                 artist: Some(&*artists),
                 album: Some(album),
-
-
-
+                duration: duration,
+                cover_url: Some("file:///home/jernej/RustyPlayer/cover.jpg"),
                 ..Default::default()
             })
             .unwrap();
@@ -174,11 +179,6 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
 
     }
 
-
-
-
-
-
     Ok(())
 }
 
@@ -200,6 +200,7 @@ fn extract_cover_from_flac(flac_path: &String) -> Result<(), std::io::Error> {
         ))
     }
 }
+
 fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error> {
     let output = Command::new("chafa")
         .arg("-s")
@@ -255,13 +256,18 @@ fn play_previous_track(played_songs_clone: Vec<usize>, music_list: &[String], si
         println!("No previous song to play or it's the first song.");
     }
 }
-*/
-fn play_previous_track(previous_index: usize, music_list: &[String], sink: &Sink) {
-    println!("Playing previous song: {}", music_list[previous_index]);
-    let file = BufReader::new(File::open(&music_list[previous_index]).unwrap());
-    let source = Decoder::new(file).unwrap();
 
-    sink.stop();
-    sink.append(source);
-    sink.play();
+fn play_previous_track(played_songs: Vec<usize>, music_list: Vec<String>, sink: &Sink) {
+    if played_songs.len() >= 2 {
+        let previous_index = played_songs[played_songs.len() - 2];
+        println!("Playing previous song: {}", music_list[previous_index]);
+        let file = BufReader::new(File::open(&music_list[previous_index]).unwrap());
+        let source = Decoder::new(file).unwrap();
+        sink.stop();
+        sink.append(source);
+        sink.play();
+    } else {
+        println!("No previous song to play or it's the first song.");
+    }
 }
+*/

@@ -1,23 +1,15 @@
-
-
 mod music_play; // Note: Use an underscore in the module nam
-
 use music_play::play_random_song; // Use functions from the music-play module
 
 
 use std::{
     fs,
-    io::{BufReader, Write, Result, Read},
-    path::PathBuf,
+    io::{Write, Result, Read},
     env,
-    sync::mpsc,
-    thread,
-    time::Duration
 };
 use std::fs::File;
 use walkdir::WalkDir;
 use rand::Rng;
-use rodio::{Decoder, OutputStream, Sink};
 use serde::{Deserialize, Serialize};
 use serde_json;
 
