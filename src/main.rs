@@ -4,13 +4,13 @@ use music_play::play_random_song; // Use functions from the music-play module
 
 use std::{
     fs,
-    io::{Write, Result, Read},
+    io::{/*Write,*/ Result/*, Read*/},
     env,
-    error::Error
+   // error::Error
 };
-use std::fs::File;
+//use std::fs::File;
 use walkdir::WalkDir;
-use rand::Rng;
+//use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
@@ -29,14 +29,13 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    if debug_mode {
-        println!("Debug mode: Enabled");
-    }
 
     // Use the filtered args to find the music directory, excluding flags
     let music_directory_arg = args.iter()
         .find(|arg| !arg.starts_with('-'))
         .map(|s| s.as_str());
+
+    if debug_mode { println!("Debug mode: Enabled"); }
 
     let mut music_config = if let Some(music_directory) = music_directory_arg {
         if debug_mode {

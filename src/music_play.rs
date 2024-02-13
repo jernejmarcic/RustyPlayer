@@ -1,19 +1,19 @@
 use std::{fs::File,
           io::BufReader,
-          path::PathBuf,
+          //path::PathBuf,
           time::Duration,
-          sync::mpsc::Sender,
-          path::Path,
+          //sync::mpsc::Sender,
+          //path::Path,
           process::Command,
           sync::{Arc, Mutex,
                  atomic::{AtomicBool, Ordering}},
           thread
 };
-use std::io::Write;
-use std::thread::sleep;
+//use std::io::Write;
+//use std::thread::sleep;
 use rand::Rng;
 use rodio::{Decoder, OutputStream, Sink};
-use audiotags::{MimeType, Tag};
+use audiotags::{Tag};
 // use termion::event::{Key, parse_event};
 // use dbus::{blocking::Connection, channel::MatchingReceiver, message::MatchRule};
 // use dbus::blocking::stdintf::org_freedesktop_dbus::EmitsChangedSignal::False;
@@ -27,7 +27,7 @@ fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
 static IS_PAUSED: AtomicBool = AtomicBool::new(false); // Start in a play state
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
-static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
+//static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 
 
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::io::Result<()> {
@@ -39,14 +39,11 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
     let mut rng = rand::thread_rng();
     let played_songs = Arc::new(Mutex::new(Vec::new()));
 
-    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+//    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
 
     loop {
-
-        let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
-
+ //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
         let randint = rng.gen_range(0..music_list.len());
-
         // Your actual logic goes here.
         played_songs.lock().unwrap().push(randint);  // Track played songs
         if debug_mode {println!("Playing song number: {}",randint)}
@@ -59,7 +56,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
         let sink = Sink::try_new(&stream_handle).unwrap();
         let tag = Tag::new().read_from_path(&music_list[randint]).unwrap();
         let title = tag.title().unwrap_or_else(|| "Unknown".into());
-        let album_cover = tag.album_cover();
+ //       let album_cover = tag.album_cover();
         let duration_seconds: Option<f64> = tag.duration();  // Example duration in seconds
         let duration: Option<Duration> = convert_to_duration(duration_seconds);
         let artists = tag
@@ -74,8 +71,8 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
 
         terminal_ui(&music_list, randint, title, album, artists.clone(),debug_mode);
 
-        let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
-        let music_list_clone = music_list;
+  //      let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
+        //     let music_list_clone = music_list;
 
         #[cfg(not(target_os = "windows"))]
             let hwnd = None;
@@ -97,7 +94,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
         let mut controls = MediaControls::new(config).unwrap();
 
         // The closure must be Send and have a static lifetime.
-        let played_songs_clone = Arc::clone(&played_songs);
+       // let played_songs_clone = Arc::clone(&played_songs);
         controls
             .attach(
                 move |event: MediaControlEvent| match event {
@@ -195,8 +192,6 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
 // has finished playing all its queued sounds.
 
     }
-
-    Ok(())
 }
 
 

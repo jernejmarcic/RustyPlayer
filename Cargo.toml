@@ -6,20 +6,20 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-audiotags = "0.4.1"
+audiotags = "0.5.0"
 clearscreen = "2.0.1"
-dbus = "0.9.7"
-metaflac = "0.2.5"
-mpsc = "0.2.0"
+# dbus = "0.9.7"
+# metaflac = "0.2.5"
+# mpsc = "0.2.0"
 rand = "0.8.5"
 rodio = "0.17.1"
 souvlaki = "0.7.3"
-symphonia = "0.5.3"
+# symphonia = "0.5.3"
 walkdir = "2.3.3"
 clap = "4.4.18"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
-dirs = "5.0.1"
-directories = "5.0.1"
+# dirs = "5.0.1"
+# directories = "5.0.1"
 
 
