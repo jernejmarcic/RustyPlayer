@@ -30,7 +30,7 @@ static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 
 
-pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
+pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::io::Result<()> {
     if music_list.is_empty() {
         println!("No songs found in the specified directory.");
         return Ok(());
@@ -49,7 +49,9 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
 
         // Your actual logic goes here.
         played_songs.lock().unwrap().push(randint);  // Track played songs
-        println!("Playing song: {}", music_list[randint]);
+        if debug_mode {println!("Playing song number: {}",randint)}
+        if debug_mode {println!("Song numbers played: {:?}", played_songs)}
+        if debug_mode{ println!("Playing song file: {}", music_list[randint]);}
      //   println!("Played songs index: {:?}", played_songs);
         // Get a output stream handle to the default physical sound device
         let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -70,7 +72,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
         let source = Decoder::new(file).unwrap();
         sink.append(source);
 
-        terminal_ui(&music_list, randint, title, album, artists.clone());
+        terminal_ui(&music_list, randint, title, album, artists.clone(),debug_mode);
 
         let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
         let music_list_clone = music_list;
@@ -100,27 +102,27 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
             .attach(
                 move |event: MediaControlEvent| match event {
                 MediaControlEvent::Play => {
-                    // println!("Pause/Play event received via MPRIS");
+                    if debug_mode {println!("{:?} event received via MPRIS",event)}
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
 
                 MediaControlEvent::Pause => {
-                 //   println!("Pause event received");
+                    if debug_mode {println!("{:?} event received via MPRIS",event)}
                     // Logic to pause the music
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
 
                 },
                 MediaControlEvent::Toggle => {
-                   // println!("Toggle event received via MPRIS");
+                    if debug_mode {println!("{:?} event received via MPRIS",event)}
                     // Toggle logic here
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
                 },
 
                 MediaControlEvent::Next => {
-                   // println!("Next event received via MPRIS");
+                    if debug_mode {println!("{:?} event received via MPRIS",event)}
                     // Logic to skip to the next track
                     // You might need to signal your playback loop to move to the next song
                     SHOULD_SKIP.store(true, Ordering::SeqCst);
@@ -128,7 +130,8 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
                 },
 
                 MediaControlEvent::Previous => {
-                   // println!("Previous button clicked");
+                    if debug_mode {println!("{:?} event received via MPRIS",event)}
+
                     // TODO: Well make it work. LOL
                     // If only it was not so FUCKING HARD.
 
@@ -136,7 +139,7 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
 
 
                 // Add more event handlers as needed
-                _ => println!("Event received: {:?}", event),
+                _ => println!("Event received: {:?}. If you see this message contact me I probably just haven't added support yet for it", event),
             })
             .unwrap();
 
@@ -159,10 +162,14 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
             let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
             if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
                 if current_paused_state {
+                    if debug_mode {println!("Attempting to pause")}
                     sink.pause();
+                    if debug_mode {println!("Track should be paused")}
                    // println!("Paused");
                 } else if !current_paused_state {  // Changed from 'else' to 'else if' to explicitly check the condition
+                    if debug_mode {println!("Attempting to resume/play")}
                     sink.play();
+                    if debug_mode {println!("Track should be resumed")}
                    // println!("Play");
                 }
                 // Update the last paused state to the current state
@@ -170,13 +177,13 @@ pub(crate) fn play_random_song(music_list: &[String]) -> std::io::Result<()> {
             }
 
 
-            thread::sleep(Duration::from_millis(100));
+            thread::sleep(Duration::from_millis(50));
         }
 
         // Check again for skip in case it was set during playback
         if SHOULD_SKIP.load(Ordering::SeqCst) {
             SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
-            println!("Skipping to the next track...");
+            println!("Attempting to skip to the next track...");
             // No need for 'continue;' here as it's the end of the loop
             continue;
         }
@@ -229,8 +236,9 @@ fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error>
     }
 }
 
-fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String) {
-    clearscreen::clear().expect("failed to clear screen");
+fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String, debug_mode: bool) {
+    if !debug_mode { clearscreen::clear().expect("Failed to clear screen"); }
+
     let flac_checker = ".flac";
 
 
