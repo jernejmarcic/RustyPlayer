@@ -28,7 +28,7 @@ sudo pacman -Sy chafa metaflac
 After installing the dependencies:
 
 ```bash
-git clone https://yourrepositorylink.git
+git clone https://github.com/jernejmarcic/RustyPlayer.git
 cd rustyplayer
 cargo build --release
 ```
