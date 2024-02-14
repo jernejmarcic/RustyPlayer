@@ -5,10 +5,11 @@ use std::{fs::File,
           //sync::mpsc::Sender,
           //path::Path,
           process::Command,
-          sync::{Arc, Mutex,
+          sync::{/*Arc, Mutex,*/
                  atomic::{AtomicBool, Ordering}},
           thread
 };
+// use std::path::{PathBuf};
 //use std::io::Write;
 //use std::thread::sleep;
 use rand::Rng;
@@ -20,9 +21,11 @@ use audiotags::{Tag};
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
 
 
+
 fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
     option_seconds.map(|secs| Duration::from_secs_f64(secs))
 }
+
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false); // Start in a play state
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
@@ -30,14 +33,14 @@ static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 //static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 
 
-pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::io::Result<()> {
+pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: &PathBuf*/) -> std::io::Result<()> {
     if music_list.is_empty() {
         println!("No songs found in the specified directory.");
         return Ok(());
     }
 
     let mut rng = rand::thread_rng();
-    let played_songs = Arc::new(Mutex::new(Vec::new()));
+    let mut played_songs:Vec<usize> = Vec::new();
 
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
 
@@ -45,7 +48,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
  //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
         let randint = rng.gen_range(0..music_list.len());
         // Your actual logic goes here.
-        played_songs.lock().unwrap().push(randint);  // Track played songs
+        played_songs.push(randint);  // Track played songs
         if debug_mode {println!("Playing song number: {}",randint)}
         if debug_mode {println!("Song numbers played: {:?}", played_songs)}
         if debug_mode{ println!("Playing song file: {}", music_list[randint]);}
@@ -69,7 +72,14 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
         let source = Decoder::new(file).unwrap();
         sink.append(source);
 
-        terminal_ui(&music_list, randint, title, album, artists.clone(),debug_mode);
+        // Construct the path to the directory where the .jpg files are located
+
+
+
+        let cover_output_path = format!("/tmp/{}.jpg", album);
+        let cover_output_path_clone = cover_output_path.clone();
+        if debug_mode {println!("Cover export path is: {}", cover_output_path)}
+        terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
   //      let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
         //     let music_list_clone = music_list;
@@ -148,7 +158,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
                 artist: Some(&*artists),
                 album: Some(album),
                 duration: duration,
-                cover_url: Some("file:///home/jernej/RustyPlayer/cover.jpg"),
+                cover_url: Some(&*format!("file://{}", cover_output_path)),
                 ..Default::default()
             })
             .unwrap();
@@ -195,25 +205,26 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool) -> std::
 }
 
 
-fn extract_cover_from_flac(flac_path: &String) -> Result<(), std::io::Error> {
-    let output_path = "cover.jpg"; // You can customize this
+fn extract_cover_from_flac(flac_path: &str, cover_output_path: String) -> Result<(), std::io::Error> {
     let output = Command::new("metaflac")
         .arg("--export-picture-to")
-        .arg(output_path)
+        .arg(&cover_output_path)
         .arg(flac_path)
-        .output()?;
+        .output();
 
-    if output.status.success() {
-        Ok(())
-    } else {
-        Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "Failed to extract album cover",
-        ))
+    match output {
+        Ok(output) if output.status.success() => Ok(()),
+        Ok(output) => {
+            // Print stderr to get more insight into the error
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            eprintln!("metaflac command failed: {}", stderr);
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to extract album cover"))
+        },
+        Err(e) => Err(e),
     }
 }
 
-fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error> {
+fn display_full_image_with_chafa(image_path: String) -> Result<(), std::io::Error> {
     let output = Command::new("chafa")
         .arg("-s")
         .arg("90x35") // Adjust the size as necessary
@@ -231,18 +242,27 @@ fn display_full_image_with_chafa(image_path: &str) -> Result<(), std::io::Error>
     }
 }
 
-fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String, debug_mode: bool) {
+fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String, debug_mode: bool, cover_output_path: String) {
     if !debug_mode { clearscreen::clear().expect("Failed to clear screen"); }
 
     let flac_checker = ".flac";
 
 
     if music_list[randint].contains(flac_checker) {
-        extract_cover_from_flac(&music_list[randint]).unwrap();
-        display_full_image_with_chafa("cover.jpg").unwrap();
+        match extract_cover_from_flac(&music_list[randint], cover_output_path.clone()) {
+            Ok(_) => {
+                if let Ok(_) = display_full_image_with_chafa(cover_output_path) {
+                    // Successfully displayed the image
+                } else {
+                    eprintln!("Failed to display image.");
+                }
+            },
+            Err(e) => eprintln!("Failed to extract album cover: {}", e),
+        }
     } else {
-
+        // Handle case where the file does not contain flac_checker
     }
+
     println!("Title:     {} \r", title);
     println!("Artists:   {} \r", artists);
     println!("Album:     {} \r", album);
