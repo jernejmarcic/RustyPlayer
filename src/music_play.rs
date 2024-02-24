@@ -52,8 +52,8 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
         if debug_mode {println!("Playing song number: {}",randint)}
         if debug_mode {println!("Song numbers played: {:?}", played_songs)}
         if debug_mode{ println!("Playing song file: {}", music_list[randint]);}
-     //   println!("Played songs index: {:?}", played_songs);
-        // Get a output stream handle to the default physical sound device
+        // println!("Played songs index: {:?}", played_songs);
+        // Get an output stream handle to the default physical sound device
         let (_stream, stream_handle) = OutputStream::try_default().unwrap();
         let file = BufReader::new(File::open(&music_list[randint]).unwrap());
         let sink = Sink::try_new(&stream_handle).unwrap();
@@ -68,9 +68,11 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
             .unwrap_or_else(|| "Unknown".into());
         let album = tag.album_title().unwrap_or_else(|| "Unknown".into());
 
+
 // Add a dummy source of the sake of the example.
         let source = Decoder::new(file).unwrap();
         sink.append(source);
+
 
         // Construct the path to the directory where the .jpg files are located
 
@@ -227,7 +229,7 @@ fn extract_cover_from_flac(flac_path: &str, cover_output_path: String) -> Result
 fn display_full_image_with_chafa(image_path: String) -> Result<(), std::io::Error> {
     let output = Command::new("chafa")
         .arg("-s")
-        .arg("90x35") // Adjust the size as necessary
+        .arg("70x25") // TODO: Make this configurable by the user and save it as a parameter in a config
         .arg(image_path)
         .output()?;
 
@@ -246,7 +248,6 @@ fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str
     if !debug_mode { clearscreen::clear().expect("Failed to clear screen"); }
 
     let flac_checker = ".flac";
-
 
     if music_list[randint].contains(flac_checker) {
         match extract_cover_from_flac(&music_list[randint], cover_output_path.clone()) {

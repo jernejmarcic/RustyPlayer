@@ -20,7 +20,7 @@ sudo dnf install chafa metaflac
 ### Arch-based Distributions (Arch Linux, Manjaro, etc.)
 
 ```bash
-sudo pacman -Sy chafa metaflac
+sudo pacman -S chafa metaflac
 ```
 
 ### General Installation Steps
@@ -29,7 +29,7 @@ After installing the dependencies:
 
 ```bash
 git clone https://github.com/jernejmarcic/RustyPlayer.git
-cd rustyplayer
+cd RustyPlayer
 cargo build --release
 ```
 
