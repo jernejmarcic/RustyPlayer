@@ -140,6 +140,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
 
                 MediaControlEvent::Previous => {
                     if debug_mode {println!("{:?} event received via MPRIS",event)}
+                    println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL",event);
 
                     // TODO: Well make it work. LOL
                     // If only it was not so FUCKING HARD.
