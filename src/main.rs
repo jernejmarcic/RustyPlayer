@@ -105,7 +105,7 @@ fn music_array(music_path: &str) -> Result<Vec<String>> {
     Ok(music_list) // Directly return an Ok variant of Result with music_list
 }
 
-fn print_help() {
+fn print_help(): {
     println!("{} Help Menu",PACKAGE_NAME);
     println!("Usage: {} [OPTIONS] [MUSIC_DIRECTORY]", PACKAGE_NAME);
     println!("");
@@ -114,7 +114,7 @@ fn print_help() {
     println!("  -d, --debug      Run the program in debug mode to display additional information and prevents the terminal screen from clearing");
     println!("");
     println!("MUSIC_DIRECTORY is an optional argument. If provided, {} will use this directory to update the music library.", PACKAGE_NAME);
-   //TODO: println!("Your current music path is set to: {}",music_directory);
+    println!("Your current music path is set to: {}",music_directory);
     println!("Configuration is located at: {}", config_path().display());
     println!("_________________________________________________");
     println!("Version: {}",PACKAGE_VERSION)
