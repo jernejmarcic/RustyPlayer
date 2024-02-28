@@ -8,6 +8,7 @@ use std::{fs::File,
           sync::{/*Arc, Mutex,*/
                  atomic::{AtomicBool, Ordering}},
           thread,
+
 };
 // use std::path::{PathBuf};
 //use std::io::Write;
@@ -26,6 +27,20 @@ fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
     option_seconds.map(|secs| Duration::from_secs_f64(secs))
 }
 
+// fn test(controls: &mut MediaControls, title: &str, artists: String, album: &str, cover_output_path: String, duration: Option<Duration>) {
+//     println!("TEST, {album}, {title}, {:?}", artists);
+//     controls
+//         .set_metadata(MediaMetadata {
+//             title: Some(title),
+//             artist: Some(&*artists),
+//             album: Some(album),
+//             duration: duration,
+//             cover_url: Some(&*format!("file://{}", cover_output_path)),
+//             ..Default::default()
+//         })
+//         .unwrap();
+//     println!("TEST, {album}, {title}, {:?}", artists);
+// }
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false);
 // Start in a play state
@@ -41,7 +56,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
     }
 
     let mut played_songs: Vec<usize> = Vec::new();
-    random_passer(music_list, debug_mode, &mut played_songs, /*&mut rng*/);
+    random_passer(music_list, debug_mode, &mut played_songs, /*&    mut rng*/);
     Ok(())
 }
 
@@ -50,6 +65,7 @@ fn random_passer(music_list: &[String], debug_mode: bool, played_songs: &mut Vec
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     let randint = rng.gen_range(0..music_list.len());
+    if debug_mode{println!("Number genereated: {}", randint)}
     played_songs.push(randint);  // Track played songs
     music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
 }
@@ -86,6 +102,8 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
 
     let cover_output_path = format!("/tmp/{}.jpg", album);
     let cover_output_path_clone = cover_output_path.clone();
+
+
     if debug_mode { println!("Cover export path is: {}", cover_output_path) }
     terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
@@ -110,6 +128,8 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
     };
 
     let mut controls = MediaControls::new(config).unwrap();
+
+
 
     // The closure must be Send and have a static lifetime.
     // let played_songs_clone = Arc::clone(&played_songs);
@@ -156,21 +176,28 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
             })
         .unwrap();
 
+    for i in 0..2 {
+        println!("TEST, {album}, {title}, {:?}", artists);
+        controls
+            .set_metadata(MediaMetadata {
+                title: Some(title),
+                artist: Some(&*artists),
+                album: Some(album),
+                duration: duration,
+                cover_url: Some(&*format!("file://{}", cover_output_path)),
+                ..Default::default()
+            })
+            .unwrap();
+        println!("TEST, {album}, {title}, {:?}", artists);
+    }
 
-    // Update the media metadata.
-    controls
-        .set_metadata(MediaMetadata {
-            title: Some(title),
-            artist: Some(&*artists),
-            album: Some(album),
-            duration: duration,
-            cover_url: Some(&*format!("file://{}", cover_output_path)),
-            ..Default::default()
-        })
-        .unwrap();
+    // test(&mut controls, title, artists, album, cover_output_path, duration);
+
+
 
 
     while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) && !SHOULD_PLAY_PREVIOUS.load(Ordering::SeqCst){
+
         // Check and handle play/pause state...
         let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
         if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
@@ -195,11 +222,10 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
 
 // Inside your playback loop
     while !sink.empty() {
-
         if SHOULD_SKIP.load(Ordering::SeqCst) {
             SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
             if debug_mode { println!("Attempting to skip to the next track..."); }
-
+            sink.clear();
             // Logic to skip to the next track, adjust `current_index` as needed
             random_passer(music_list, debug_mode,played_songs, /*&mut rng*/);
         }
@@ -209,7 +235,8 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
             if debug_mode { println!("Attempting to go back to the previous track..."); }
 
             // Logic to play the previous track, adjust `current_index` as needed
-            if played_songs.len() > 2 {
+            if played_songs.len() >= 2 {
+                sink.clear();
                 let randint = played_songs[played_songs.len()-2];
                 played_songs.pop();
                 music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
@@ -217,7 +244,7 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
                 println!("Not enough songs in the play queue")
             }
 
-            
+
 
         }
 
@@ -227,6 +254,7 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
 
 
     sink.sleep_until_end();
+
     random_passer(music_list, debug_mode,played_songs, /*&mut rng*/)
 
 // The sound plays in a separate thread. This call will block the current thread until the sink
