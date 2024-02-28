@@ -31,7 +31,7 @@ static IS_PAUSED: AtomicBool = AtomicBool::new(false);
 // Start in a play state
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
-//static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
+static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 
 
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: &PathBuf*/) -> std::io::Result<()> {
@@ -41,17 +41,20 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
     }
 
     let mut played_songs: Vec<usize> = Vec::new();
-    music_player(music_list, debug_mode, &mut played_songs, /*&mut rng*/);
+    random_passer(music_list, debug_mode, &mut played_songs, /*&mut rng*/);
     Ok(())
 }
 
-fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, /* rng: &mut rand::ThreadRng */) {
+fn random_passer(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, /* rng: &mut rand::ThreadRng */) {
     let mut rng = rand::thread_rng();
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     let randint = rng.gen_range(0..music_list.len());
-    // Your actual logic goes here.
     played_songs.push(randint);  // Track played songs
+    music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
+}
+
+fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, randint: usize) {
     if debug_mode { println!("Playing song number: {}", randint) }
     if debug_mode { println!("Song numbers played: {:?}", played_songs) }
     if debug_mode { println!("Playing song file: {}", music_list[randint]); }
@@ -141,8 +144,8 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
 
                 MediaControlEvent::Previous => {
                     if debug_mode { println!("{:?} event received via MPRIS", event) }
-                    println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
-
+                  //  println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
+                    SHOULD_PLAY_PREVIOUS.store(true, Ordering::SeqCst);
                     // TODO: Well make it work. LOL
                     // If only it was not so FUCKING HARD.
                 }
@@ -167,7 +170,7 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
         .unwrap();
 
 
-    while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) {
+    while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) && !SHOULD_PLAY_PREVIOUS.load(Ordering::SeqCst){
         // Check and handle play/pause state...
         let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
         if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
@@ -190,17 +193,41 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
         thread::sleep(Duration::from_millis(50));
     }
 
-    // Check again for skip in case it was set during playback
-    if SHOULD_SKIP.load(Ordering::SeqCst) {
-        SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
-        println!("Attempting to skip to the next track...");
-        // Well now the function calls itself so umm even more recursion
-        music_player(music_list, debug_mode, played_songs);
+// Inside your playback loop
+    while !sink.empty() {
+
+        if SHOULD_SKIP.load(Ordering::SeqCst) {
+            SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
+            if debug_mode { println!("Attempting to skip to the next track..."); }
+
+            // Logic to skip to the next track, adjust `current_index` as needed
+            random_passer(music_list, debug_mode,played_songs, /*&mut rng*/);
+        }
+
+        if SHOULD_PLAY_PREVIOUS.load(Ordering::SeqCst) {
+            SHOULD_PLAY_PREVIOUS.store(false, Ordering::SeqCst);  // Reset the flag
+            if debug_mode { println!("Attempting to go back to the previous track..."); }
+
+            // Logic to play the previous track, adjust `current_index` as needed
+            if played_songs.len() > 2 {
+                let randint = played_songs[played_songs.len()-2];
+                played_songs.pop();
+                music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
+            } else {
+                println!("Not enough songs in the play queue")
+            }
+
+            
+
+        }
+
+        // Continue existing play/pause state checks here...
+        thread::sleep(Duration::from_millis(50));
     }
 
+
     sink.sleep_until_end();
-    // This should hopefully make the thing restart when the song is finished
-    music_player(music_list, debug_mode, played_songs);
+    random_passer(music_list, debug_mode,played_songs, /*&mut rng*/)
 
 // The sound plays in a separate thread. This call will block the current thread until the sink
 // has finished playing all its queued sounds.
