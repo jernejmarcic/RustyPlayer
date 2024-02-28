@@ -21,7 +21,7 @@ sudo apt-get install chafa metaflac
 sudo dnf install chafa metaflac
 ```
 
-### Arch-based Distributions (Arch Linux, Manjaro, etc.)
+### Arch-based Distributions (Arch Linux, Endeavour OS, Manjaro, etc.)
 
 ```bash
 sudo pacman -S chafa metaflac
