@@ -6,19 +6,20 @@ use std::{
     io::{Result, Write},
     env,
     path::PathBuf,
+    // collections::HashSet
 };
 use walkdir::WalkDir;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
-
-
 #[derive(Serialize, Deserialize)]
 struct MusicConfig {
-    prompt_user_for_playlist: bool, // Whether to prompt the user to choose a playlist
-    user_playlist_choice: usize, // The user's choice of which playlist to play, 0 for all
-    original_paths: Vec<String>, // Stores the original paths entered by the user
-    playlists: Vec<Vec<String>>, // Now supports multiple playlists, each playlist is a Vec<String>
+    music_directory: String,
+    music_list: Vec<String>,
+    // prompt_user_for_playlist: bool, // Whether to prompt the user to choose a playlist
+    // user_playlist_choice: usize, // The user's choice of which playlist to play, 0 for all
+    // original_paths: Vec<String>, // Stores the original paths entered by the user
+    // playlists: Vec<Vec<String>>, // Now supports multiple playlists, each playlist is a Vec<String>
 }
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -27,15 +28,30 @@ const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 fn main() -> Result<()> {
     let args: Vec<String> = env::args().skip(1).collect();
     let debug_mode = args.iter().any(|arg| arg == "-d" || arg == "--debug");
+    if debug_mode { println!("Debug mode: Enabled"); }
+
 
     if args.iter().any(|arg| arg == "-h" || arg == "--help") {
         print_help();
         return Ok(());
     }
+// Filter out flags and collect remaining arguments as music directories
+//
+//     let music_directories_raw: Vec<String> = args.iter()
+//         .skip(1) // Skip the program name
+//         .filter(|arg| !arg.starts_with('-'))
+//         .cloned()
+//         .collect();
+//     if debug_mode {println!("'Raw' directories will be cleaned so there are no repetitions: {:?}", music_directories_raw);}
+//
+//     let unique_music_directories: Vec<String> = music_directories_raw.into_iter()
+//      .collect::<HashSet<_>>() // Convert to HashSet to remove duplicates
+//      .into_iter() // Convert back into an Iterator
+//      .collect(); // Collect back into Vec<String>
+//     if debug_mode {println!("Cleaned directories to remove repetition{:?}",unique_music_directories);}
+
 
     let music_directory_arg = args.iter().find(|arg| !arg.starts_with('-')).map(|s| s.as_str());
-
-    if debug_mode { println!("Debug mode: Enabled"); }
 
     let mut music_config = if let Some(music_directory) = music_directory_arg {
         if debug_mode { println!("Config update: Using directory '{}'", music_directory); }
@@ -118,7 +134,7 @@ fn print_help() {
     println!("  -d, --debug      Run the program in debug mode to display additional information and prevents the terminal screen from clearing");
     println!("");
     println!("MUSIC_DIRECTORY is an optional argument. If provided, {} will use this directory to update the music library.", PACKAGE_NAME);
-   // println!("Your current music path is set to: {}",music_directory);
+    // println!("Your current music path is set to: {}",music_directory);
     println!("Configuration is located at: {}", config_path().display());
     println!("_________________________________________________");
     println!("Version: {}",PACKAGE_VERSION)

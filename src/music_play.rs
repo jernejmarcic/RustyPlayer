@@ -47,6 +47,7 @@ static IS_PAUSED: AtomicBool = AtomicBool::new(false);
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
+const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
 
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: &PathBuf*/) -> std::io::Result<()> {
@@ -55,27 +56,28 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
         return Ok(());
     }
 
-    let mut played_songs: Vec<usize> = Vec::new();
+    let mut song_history: Vec<Vec<usize>> = vec![vec![], vec![]]; // Initialize with two empty rows
 
-    random_passer(music_list, debug_mode, &mut played_songs, /*&    mut rng*/);
+    println!(" Song history {:?}", song_history);
+    random_passer(music_list, debug_mode, &mut song_history, /*&    mut rng*/);
     Ok(())
 }
 
-fn random_passer(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, /* rng: &mut rand::ThreadRng */) {
+fn random_passer(music_list: &[String], debug_mode: bool, song_history: &mut Vec<Vec<usize>>, /* rng: &mut rand::ThreadRng */) {
     let mut rng = rand::thread_rng();
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     let randint = rng.gen_range(0..music_list.len());
     if debug_mode{println!("Number genereated: {}", randint)}
-    played_songs.push(randint);  // Track played songs
-    music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
+    song_history[0].push(randint);  // Track played songs
+    music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
 }
 
-fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, randint: usize) {
+fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<Vec<usize>>, randint: usize) {
     if debug_mode { println!("Playing song number: {}", randint) }
-    if debug_mode { println!("Song numbers played: {:?}", played_songs) }
+    if debug_mode { println!("Song numbers played: {:?}", song_history) }
     if debug_mode { println!("Playing song file: {}", music_list[randint]); }
-    // println!("Played songs index: {:?}", played_songs);
+    // println!("Played songs index: {:?}", song_history);
     // Get an output stream handle to the default physical sound device
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
     let file = BufReader::new(File::open(&music_list[randint]).unwrap());
@@ -101,14 +103,14 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
     // Construct the path to the directory where the .jpg files are located
 
 
-    let cover_output_path = format!("/tmp/{}.jpg", album);
+    let cover_output_path = format!("/tmp/{}cover-{}.jpg",PACKAGE_NAME, album);
     let cover_output_path_clone = cover_output_path.clone();
 
 
     if debug_mode { println!("Cover export path is: {}", cover_output_path) }
     terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
-    //      let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
+    //      let song_history_clone = song_history.clone();  // Clone song_history for the closure
     //     let music_list_clone = music_list;
 
     #[cfg(not(target_os = "windows"))]
@@ -123,7 +125,7 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
     };
 
     let config = PlatformConfig {
-        dbus_name: "rustyplayer",
+        dbus_name: PACKAGE_NAME,
         display_name: "Rusty Player",
         hwnd,
     };
@@ -131,54 +133,53 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
     let mut controls = MediaControls::new(config).unwrap();
 
 
+        // The closure must be Send and have a static lifetime.
+        // let song_history_clone = Arc::clone(&song_history);
+        controls
+            .attach(
+                move |event: MediaControlEvent| match event {
+                    MediaControlEvent::Play => {
+                        if debug_mode { println!("{:?} event received via MPRIS", event) }
+                        let current_state = IS_PAUSED.load(Ordering::SeqCst);
+                        IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
+                    }
 
-    // The closure must be Send and have a static lifetime.
-    // let played_songs_clone = Arc::clone(&played_songs);
-    controls
-        .attach(
-            move |event: MediaControlEvent| match event {
-                MediaControlEvent::Play => {
-                    if debug_mode { println!("{:?} event received via MPRIS", event) }
-                    let current_state = IS_PAUSED.load(Ordering::SeqCst);
-                    IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-                }
+                    MediaControlEvent::Pause => {
+                        if debug_mode { println!("{:?} event received via MPRIS", event) }
+                        // Logic to pause the music
+                        let current_state = IS_PAUSED.load(Ordering::SeqCst);
+                        IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
+                    }
+                    MediaControlEvent::Toggle => {
+                        if debug_mode { println!("{:?} event received via MPRIS", event) }
+                        // Toggle logic here
+                        let current_state = IS_PAUSED.load(Ordering::SeqCst);
+                        IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
+                    }
 
-                MediaControlEvent::Pause => {
-                    if debug_mode { println!("{:?} event received via MPRIS", event) }
-                    // Logic to pause the music
-                    let current_state = IS_PAUSED.load(Ordering::SeqCst);
-                    IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-                }
-                MediaControlEvent::Toggle => {
-                    if debug_mode { println!("{:?} event received via MPRIS", event) }
-                    // Toggle logic here
-                    let current_state = IS_PAUSED.load(Ordering::SeqCst);
-                    IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-                }
+                    MediaControlEvent::Next => {
+                        if debug_mode { println!("{:?} event received via MPRIS", event) }
+                        // Logic to skip to the next track
+                        // You might need to signal your playback loop to move to the next song
+                        SHOULD_SKIP.store(true, Ordering::SeqCst);
+                    }
 
-                MediaControlEvent::Next => {
-                    if debug_mode { println!("{:?} event received via MPRIS", event) }
-                    // Logic to skip to the next track
-                    // You might need to signal your playback loop to move to the next song
-                    SHOULD_SKIP.store(true, Ordering::SeqCst);
-                }
-
-                MediaControlEvent::Previous => {
-                    if debug_mode { println!("{:?} event received via MPRIS", event) }
-                  //  println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
-                    SHOULD_PLAY_PREVIOUS.store(true, Ordering::SeqCst);
-                    // TODO: Well make it work. LOL
-                    // If only it was not so FUCKING HARD.
-                }
+                    MediaControlEvent::Previous => {
+                        if debug_mode { println!("{:?} event received via MPRIS", event) }
+                        //  println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
+                        SHOULD_PLAY_PREVIOUS.store(true, Ordering::SeqCst);
+                        // TODO: Well make it work. LOL
+                        // If only it was not so FUCKING HARD.
+                    }
 
 
-                // Add more event handlers as needed
-                _ => println!("Event received: {:?}. If you see this message contact me I probably just haven't added support yet for it", event),
-            })
-        .unwrap();
+                    // Add more event handlers as needed
+                    _ => println!("Event received: {:?}. If you see this message contact me I probably just haven't added support yet for it", event),
+                })
+            .unwrap();
 
-    for i in 0..2 {
-        println!("TEST, {album}, {title}, {:?}", artists);
+
+    //    println!("TEST, {album}, {title}, {:?}", artists);
         controls
             .set_metadata(MediaMetadata {
                 title: Some(title),
@@ -189,11 +190,10 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
                 ..Default::default()
             })
             .unwrap();
-        println!("TEST, {album}, {title}, {:?}", artists);
-    }
+       // println!("TEST, {album}, {title}, {:?}", artists);
 
-    // test(&mut controls, title, artists, album, cover_output_path, duration);
 
+        // test(&mut controls, title, artists, album, cover_output_path, duration);
 
 
 
@@ -227,8 +227,17 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
             SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
             if debug_mode { println!("Attempting to skip to the next track..."); }
             sink.clear();
+
+            if song_history[1].len() >= 1 {
+                let randint = song_history[1][song_history[1].len()-1];
+                song_history[1].pop();
+                music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
+
+            } else {
+                random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
+            }
             // Logic to skip to the next track, adjust `current_index` as needed
-            random_passer(music_list, debug_mode,played_songs, /*&mut rng*/);
+            random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
         }
 
         if SHOULD_PLAY_PREVIOUS.load(Ordering::SeqCst) {
@@ -236,11 +245,12 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
             if debug_mode { println!("Attempting to go back to the previous track..."); }
 
             // Logic to play the previous track, adjust `current_index` as needed
-            if played_songs.len() >= 2 {
+            if song_history[0].len() >= 2 {
                 sink.clear();
-                let randint = played_songs[played_songs.len()-2];
-                played_songs.pop();
-                music_player(music_list, debug_mode,played_songs, randint/*&mut rng*/);
+                song_history[1].push(randint);
+                let randint = song_history[0][song_history[0].len()-2];
+                song_history[0].pop();
+                music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
             } else {
                 println!("Not enough songs in the play queue")
             }
@@ -255,8 +265,16 @@ fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<
 
 
     sink.sleep_until_end();
+    if song_history[1].len() >= 1 {
+        let randint = song_history[1][song_history[1].len()-1];
+        song_history[1].pop();
+        music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
 
-    random_passer(music_list, debug_mode,played_songs, /*&mut rng*/)
+    } else {
+        random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
+    }
+    // Logic to skip to the next track, adjust `current_index` as needed
+
 
 // The sound plays in a separate thread. This call will block the current thread until the sink
 // has finished playing all its queued sounds.
@@ -326,10 +344,10 @@ fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str
     //println!("Duration: {:?} \r", duration);
 }
 /*
-fn play_previous_track(played_songs_clone: Vec<usize>, music_list: &[String], sink: &Sink) {
-    if played_songs_clone.len() >= 2 {
+fn play_previous_track(song_history_clone: Vec<usize>, music_list: &[String], sink: &Sink) {
+    if song_history_clone.len() >= 2 {
         // Use the second-last element for the previous song
-        let previous_index = played_songs_clone[played_songs_clone.len() - 2];
+        let previous_index = song_history_clone[song_history_clone.len() - 2];
 
         // Logic to play the previous song
         println!("Playing previous song: {}", music_list[previous_index]);
@@ -347,9 +365,9 @@ fn play_previous_track(played_songs_clone: Vec<usize>, music_list: &[String], si
     }
 }
 
-fn play_previous_track(played_songs: Vec<usize>, music_list: Vec<String>, sink: &Sink) {
-    if played_songs.len() >= 2 {
-        let previous_index = played_songs[played_songs.len() - 2];
+fn play_previous_track(song_history: Vec<usize>, music_list: Vec<String>, sink: &Sink) {
+    if song_history.len() >= 2 {
+        let previous_index = song_history[song_history.len() - 2];
         println!("Playing previous song: {}", music_list[previous_index]);
         let file = BufReader::new(File::open(&music_list[previous_index]).unwrap());
         let source = Decoder::new(file).unwrap();
