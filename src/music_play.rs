@@ -7,7 +7,7 @@ use std::{fs::File,
           process::Command,
           sync::{/*Arc, Mutex,*/
                  atomic::{AtomicBool, Ordering}},
-          thread
+          thread,
 };
 // use std::path::{PathBuf};
 //use std::io::Write;
@@ -21,13 +21,14 @@ use audiotags::{Tag};
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
 
 
-
+// This just basically changes the duration from Option<Duration> to Option<f64> which is
 fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
     option_seconds.map(|secs| Duration::from_secs_f64(secs))
 }
 
 
-static IS_PAUSED: AtomicBool = AtomicBool::new(false); // Start in a play state
+static IS_PAUSED: AtomicBool = AtomicBool::new(false);
+// Start in a play state
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 //static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
@@ -39,172 +40,170 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
         return Ok(());
     }
 
+    let mut played_songs: Vec<usize> = Vec::new();
+    music_player(music_list, debug_mode, &mut played_songs, /*&mut rng*/);
+    Ok(())
+}
+
+fn music_player(music_list: &[String], debug_mode: bool, played_songs: &mut Vec<usize>, /* rng: &mut rand::ThreadRng */) {
     let mut rng = rand::thread_rng();
-    let mut played_songs:Vec<usize> = Vec::new();
-
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+    //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+    let randint = rng.gen_range(0..music_list.len());
+    // Your actual logic goes here.
+    played_songs.push(randint);  // Track played songs
+    if debug_mode { println!("Playing song number: {}", randint) }
+    if debug_mode { println!("Song numbers played: {:?}", played_songs) }
+    if debug_mode { println!("Playing song file: {}", music_list[randint]); }
+    // println!("Played songs index: {:?}", played_songs);
+    // Get an output stream handle to the default physical sound device
+    let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+    let file = BufReader::new(File::open(&music_list[randint]).unwrap());
+    let sink = Sink::try_new(&stream_handle).unwrap();
 
-    loop {
- //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
-        let randint = rng.gen_range(0..music_list.len());
-        // Your actual logic goes here.
-        played_songs.push(randint);  // Track played songs
-        if debug_mode {println!("Playing song number: {}",randint)}
-        if debug_mode {println!("Song numbers played: {:?}", played_songs)}
-        if debug_mode{ println!("Playing song file: {}", music_list[randint]);}
-        // println!("Played songs index: {:?}", played_songs);
-        // Get an output stream handle to the default physical sound device
-        let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-        let file = BufReader::new(File::open(&music_list[randint]).unwrap());
-        let sink = Sink::try_new(&stream_handle).unwrap();
-        let tag = Tag::new().read_from_path(&music_list[randint]).unwrap();
-        let title = tag.title().unwrap_or_else(|| "Unknown".into());
- //       let album_cover = tag.album_cover();
-        let duration_seconds: Option<f64> = tag.duration();  // Example duration in seconds
-        let duration: Option<Duration> = convert_to_duration(duration_seconds);
-        let artists = tag
-            .artists()
-            .map(|a| a.join(", "))
-            .unwrap_or_else(|| "Unknown".into());
-        let album = tag.album_title().unwrap_or_else(|| "Unknown".into());
+    let tag = Tag::new().read_from_path(&music_list[randint]).unwrap();
+    let title = tag.title().unwrap_or_else(|| "Unknown".into());
+    //       let album_cover = tag.album_cover();
+    let duration_seconds: Option<f64> = tag.duration();  // Example duration in miliseconds
+    let duration: Option<Duration> = convert_to_duration(duration_seconds);
+    let artists = tag
+        .artists()
+        .map(|a| a.join(", "))
+        .unwrap_or_else(|| "Unknown".into());
+    let album = tag.album_title().unwrap_or_else(|| "Unknown".into());
 
 
 // Add a dummy source of the sake of the example.
-        let source = Decoder::new(file).unwrap();
-        sink.append(source);
+    let source = Decoder::new(file).unwrap();
+    sink.append(source);
 
 
-        // Construct the path to the directory where the .jpg files are located
+    // Construct the path to the directory where the .jpg files are located
 
 
+    let cover_output_path = format!("/tmp/{}.jpg", album);
+    let cover_output_path_clone = cover_output_path.clone();
+    if debug_mode { println!("Cover export path is: {}", cover_output_path) }
+    terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
-        let cover_output_path = format!("/tmp/{}.jpg", album);
-        let cover_output_path_clone = cover_output_path.clone();
-        if debug_mode {println!("Cover export path is: {}", cover_output_path)}
-        terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
+    //      let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
+    //     let music_list_clone = music_list;
 
-  //      let played_songs_clone = played_songs.clone();  // Clone played_songs for the closure
-        //     let music_list_clone = music_list;
+    #[cfg(not(target_os = "windows"))]
+        let hwnd = None;
 
-        #[cfg(not(target_os = "windows"))]
-            let hwnd = None;
+    #[cfg(target_os = "windows")]
+        let hwnd = {
+        use raw_window_handle::windows::WindowsHandle;
 
-        #[cfg(target_os = "windows")]
-            let hwnd = {
-            use raw_window_handle::windows::WindowsHandle;
+        let handle: WindowsHandle = unimplemented!();
+        Some(handle.hwnd)
+    };
 
-            let handle: WindowsHandle = unimplemented!();
-            Some(handle.hwnd)
-        };
+    let config = PlatformConfig {
+        dbus_name: "rustyplayer",
+        display_name: "Rusty Player",
+        hwnd,
+    };
 
-        let config = PlatformConfig {
-            dbus_name: "rustyplayer",
-            display_name: "Rusty Player",
-            hwnd,
-        };
+    let mut controls = MediaControls::new(config).unwrap();
 
-        let mut controls = MediaControls::new(config).unwrap();
-
-        // The closure must be Send and have a static lifetime.
-       // let played_songs_clone = Arc::clone(&played_songs);
-        controls
-            .attach(
-                move |event: MediaControlEvent| match event {
+    // The closure must be Send and have a static lifetime.
+    // let played_songs_clone = Arc::clone(&played_songs);
+    controls
+        .attach(
+            move |event: MediaControlEvent| match event {
                 MediaControlEvent::Play => {
-                    if debug_mode {println!("{:?} event received via MPRIS",event)}
+                    if debug_mode { println!("{:?} event received via MPRIS", event) }
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-                },
+                }
 
                 MediaControlEvent::Pause => {
-                    if debug_mode {println!("{:?} event received via MPRIS",event)}
+                    if debug_mode { println!("{:?} event received via MPRIS", event) }
                     // Logic to pause the music
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-
-                },
+                }
                 MediaControlEvent::Toggle => {
-                    if debug_mode {println!("{:?} event received via MPRIS",event)}
+                    if debug_mode { println!("{:?} event received via MPRIS", event) }
                     // Toggle logic here
                     let current_state = IS_PAUSED.load(Ordering::SeqCst);
                     IS_PAUSED.store(!current_state, Ordering::SeqCst);  // Toggle the state
-                },
+                }
 
                 MediaControlEvent::Next => {
-                    if debug_mode {println!("{:?} event received via MPRIS",event)}
+                    if debug_mode { println!("{:?} event received via MPRIS", event) }
                     // Logic to skip to the next track
                     // You might need to signal your playback loop to move to the next song
                     SHOULD_SKIP.store(true, Ordering::SeqCst);
-
-                },
+                }
 
                 MediaControlEvent::Previous => {
-                    if debug_mode {println!("{:?} event received via MPRIS",event)}
-                    println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL",event);
+                    if debug_mode { println!("{:?} event received via MPRIS", event) }
+                    println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
 
                     // TODO: Well make it work. LOL
                     // If only it was not so FUCKING HARD.
-
-                },
+                }
 
 
                 // Add more event handlers as needed
                 _ => println!("Event received: {:?}. If you see this message contact me I probably just haven't added support yet for it", event),
             })
-            .unwrap();
+        .unwrap();
 
 
-        // Update the media metadata.
-        controls
-            .set_metadata(MediaMetadata {
-                title: Some(title),
-                artist: Some(&*artists),
-                album: Some(album),
-                duration: duration,
-                cover_url: Some(&*format!("file://{}", cover_output_path)),
-                ..Default::default()
-            })
-            .unwrap();
+    // Update the media metadata.
+    controls
+        .set_metadata(MediaMetadata {
+            title: Some(title),
+            artist: Some(&*artists),
+            album: Some(album),
+            duration: duration,
+            cover_url: Some(&*format!("file://{}", cover_output_path)),
+            ..Default::default()
+        })
+        .unwrap();
 
 
-        while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) {
-            // Check and handle play/pause state...
-            let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
-            if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
-                if current_paused_state {
-                    if debug_mode {println!("Attempting to pause")}
-                    sink.pause();
-                    if debug_mode {println!("Track should be paused")}
-                   // println!("Paused");
-                } else if !current_paused_state {  // Changed from 'else' to 'else if' to explicitly check the condition
-                    if debug_mode {println!("Attempting to resume/play")}
-                    sink.play();
-                    if debug_mode {println!("Track should be resumed")}
-                   // println!("Play");
-                }
-                // Update the last paused state to the current state
-                LAST_PAUSED_STATE.store(current_paused_state, Ordering::SeqCst);
+    while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) {
+        // Check and handle play/pause state...
+        let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+        if current_paused_state != LAST_PAUSED_STATE.load(Ordering::SeqCst) {
+            if current_paused_state {
+                if debug_mode { println!("Attempting to pause") }
+                sink.pause();
+                if debug_mode { println!("Track should be paused") }
+                // println!("Paused");
+            } else if !current_paused_state {  // Changed from 'else' to 'else if' to explicitly check the condition
+                if debug_mode { println!("Attempting to resume/play") }
+                sink.play();
+                if debug_mode { println!("Track should be resumed") }
+                // println!("Play");
             }
-
-
-            thread::sleep(Duration::from_millis(50));
+            // Update the last paused state to the current state
+            LAST_PAUSED_STATE.store(current_paused_state, Ordering::SeqCst);
         }
 
-        // Check again for skip in case it was set during playback
-        if SHOULD_SKIP.load(Ordering::SeqCst) {
-            SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
-            println!("Attempting to skip to the next track...");
-            // No need for 'continue;' here as it's the end of the loop
-            continue;
-        }
 
-        sink.sleep_until_end();
+        thread::sleep(Duration::from_millis(50));
+    }
 
+    // Check again for skip in case it was set during playback
+    if SHOULD_SKIP.load(Ordering::SeqCst) {
+        SHOULD_SKIP.store(false, Ordering::SeqCst);  // Reset the flag
+        println!("Attempting to skip to the next track...");
+        // Well now the function calls itself so umm even more recursion
+        music_player(music_list, debug_mode, played_songs);
+    }
+
+    sink.sleep_until_end();
+    // This should hopefully make the thing restart when the song is finished
+    music_player(music_list, debug_mode, played_songs);
 
 // The sound plays in a separate thread. This call will block the current thread until the sink
 // has finished playing all its queued sounds.
-
-    }
 }
 
 
@@ -222,7 +221,7 @@ fn extract_cover_from_flac(flac_path: &str, cover_output_path: String) -> Result
             let stderr = String::from_utf8_lossy(&output.stderr);
             eprintln!("metaflac command failed: {}", stderr);
             Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to extract album cover"))
-        },
+        }
         Err(e) => Err(e),
     }
 }
@@ -258,7 +257,7 @@ fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str
                 } else {
                     eprintln!("Failed to display image.");
                 }
-            },
+            }
             Err(e) => eprintln!("Failed to extract album cover: {}", e),
         }
     } else {
@@ -269,7 +268,6 @@ fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str
     println!("Artists:   {} \r", artists);
     println!("Album:     {} \r", album);
     //println!("Duration: {:?} \r", duration);
-
 }
 /*
 fn play_previous_track(played_songs_clone: Vec<usize>, music_list: &[String], sink: &Sink) {
