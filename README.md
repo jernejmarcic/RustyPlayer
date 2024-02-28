@@ -57,7 +57,7 @@ Rustyplayer showing the album cover, and information abot the playing song:
 
 ## Features
 
-- Music playback with controls: `play`, `pause`, `next`, and `toggle`(still working on `previous).
+- Music playback with controls: `play`, `pause`, `next`, `toggle`, `previous` (Rodio, the audio backnd I use does not have seek functionality yet)
 - Terminal-based album art display using `chafa`.
 - Basic MPRIS support for desktop environment integration.
   - Supports inlcudes: 
@@ -71,7 +71,7 @@ Rustyplayer showing the album cover, and information abot the playing song:
 
 ## TODO
 
-- [ ] **Previous Track Logic**: Even though the foundation exists, implementing logic to play the previous track has been VERY F****** HARD. This involves managing song indexes and ensuring seamless playback transition.
+- [x] **Previous Track Logic**: Even though the foundation exists, implementing logic to play the previous track has been VERY F****** HARD. This involves managing song indexes and ensuring seamless playback transition.
 - [ ] **Cross-Platform Support**: Extend compatibility to Windows and Mac. Some features might already work, but comprehensive testing and development are needed to ensure full functionality across different operating systems.
 - [ ] **Art URL Improvement**: Currently, the album art URL is static. The goal is to dynamically generate this URL, ensuring it accurately reflects the currently playing track's album art across all platforms.
 - [ ] **Config Enhancements**: Plans are in place to refine the configuration process, particularly by adhering to the XDG Base Directory specifications on Linux. Similar standards will be considered for Windows and Mac to streamline user settings and data management but IDK if Windows even has any standards for configration files.
@@ -82,7 +82,7 @@ Rustyplayer showing the album cover, and information abot the playing song:
 - Initial project with room for codebase improvements.
 - Limited UI features.
 - Dependency on Linux-specific tools for some features.
-- In development MPRIS support and previous song functionality.
+- In development MPRIS support
 - Used WAYYYY too much ChatGPT
 
 ## Technical Details
