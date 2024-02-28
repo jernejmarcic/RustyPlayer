@@ -343,39 +343,4 @@ fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str
     println!("Album:     {} \r", album);
     //println!("Duration: {:?} \r", duration);
 }
-/*
-fn play_previous_track(song_history_clone: Vec<usize>, music_list: &[String], sink: &Sink) {
-    if song_history_clone.len() >= 2 {
-        // Use the second-last element for the previous song
-        let previous_index = song_history_clone[song_history_clone.len() - 2];
 
-        // Logic to play the previous song
-        println!("Playing previous song: {}", music_list[previous_index]);
-        let file = BufReader::new(File::open(&music_list[previous_index]).unwrap());
-        let source = Decoder::new(file).unwrap();
-
-        // Stop the current playing song and clear the Sink
-        sink.stop();
-        // It's not necessary to recreate the Sink, just append the new source
-        sink.append(source);
-        // Play the song
-        sink.play();
-    } else {
-        println!("No previous song to play or it's the first song.");
-    }
-}
-
-fn play_previous_track(song_history: Vec<usize>, music_list: Vec<String>, sink: &Sink) {
-    if song_history.len() >= 2 {
-        let previous_index = song_history[song_history.len() - 2];
-        println!("Playing previous song: {}", music_list[previous_index]);
-        let file = BufReader::new(File::open(&music_list[previous_index]).unwrap());
-        let source = Decoder::new(file).unwrap();
-        sink.stop();
-        sink.append(source);
-        sink.play();
-    } else {
-        println!("No previous song to play or it's the first song.");
-    }
-}
-*/

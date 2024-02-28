@@ -2,6 +2,10 @@
 
 Rustyplayer is a basic, somewhat functioning music listener written in Rust. It is my first serious Rust project and my most usefull coding project in general.
 
+## Known issues:
+if you have any more issue please report them
+ - Song metadata not updating
+
 ## Installation
 
 ### Debian-based Distributions (Ubuntu, Debian, etc.)
