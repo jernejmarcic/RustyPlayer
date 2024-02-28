@@ -56,6 +56,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
     }
 
     let mut played_songs: Vec<usize> = Vec::new();
+
     random_passer(music_list, debug_mode, &mut played_songs, /*&    mut rng*/);
     Ok(())
 }

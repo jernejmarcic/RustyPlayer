@@ -11,10 +11,14 @@ use walkdir::WalkDir;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
+
+
 #[derive(Serialize, Deserialize)]
 struct MusicConfig {
-    music_directory: String,
-    music_list: Vec<String>,
+    prompt_user_for_playlist: bool, // Whether to prompt the user to choose a playlist
+    user_playlist_choice: usize, // The user's choice of which playlist to play, 0 for all
+    original_paths: Vec<String>, // Stores the original paths entered by the user
+    playlists: Vec<Vec<String>>, // Now supports multiple playlists, each playlist is a Vec<String>
 }
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
