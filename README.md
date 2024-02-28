@@ -1,6 +1,6 @@
 # Rustyplayer
 
-Rustyplayer is a basic, somewhat functioning music listener written in Rust. It is my first serious Rust project and my most usefull coding project in general.
+Rustyplayer is a basic, functioning music listener written in Rust. It is my first serious Rust project and my most usefull coding project in general.
 
 ## Known issues:
 if you have any more issue please report them
@@ -45,6 +45,8 @@ Run Rustyplayer with the path to your music directory:
 ./target/release/rustyplayer /path/to/your/music/directory
 ```
 
+You can move the binary wherever you want but if you got this far it seems you understand computers well enough
+
 Use the path argument only when you want to change the music directory. Rustyplayer remembers your last-used directory and automatically plays from it on subsequent launches.
 
 ### Screenshots
@@ -56,7 +58,6 @@ Entering the path to the music folder:
 Rustyplayer showing the album cover, and information abot the playing song:
 
 <img src="screenshots/20240212_11h48m39s_grim.png" alt="Rusty player playing music" width="500"/><br>
-
 
 
 ## Features
@@ -77,7 +78,7 @@ Rustyplayer showing the album cover, and information abot the playing song:
 
 - [x] **Previous Track Logic**: Even though the foundation exists, implementing logic to play the previous track has been VERY F****** HARD. This involves managing song indexes and ensuring seamless playback transition.
 - [ ] **Cross-Platform Support**: Extend compatibility to Windows and Mac. Some features might already work, but comprehensive testing and development are needed to ensure full functionality across different operating systems.
-- [ ] **Art URL Improvement**: Currently, the album art URL is static. The goal is to dynamically generate this URL, ensuring it accurately reflects the currently playing track's album art across all platforms.
+- [x] **Art URL Improvement**: Currently, the album art URL is static. The goal is to dynamically generate this URL, ensuring it accurately reflects the currently playing track's album art across all platforms.
 - [ ] **Config Enhancements**: Plans are in place to refine the configuration process, particularly by adhering to the XDG Base Directory specifications on Linux. Similar standards will be considered for Windows and Mac to streamline user settings and data management but IDK if Windows even has any standards for configration files.
 - [ ] **Additional Features and Fixes**: Continuous effort to enhance the user interface, integrate more robust MPRIS support, and overall improve the codebase for better performance and user experience.
 
@@ -93,6 +94,11 @@ Rustyplayer showing the album cover, and information abot the playing song:
 
 Rustyplayer uses `rodio` for audio playback, `audiotags` for metadata handling, and `walkdir` for directory traversal.
 In addition, is uses `metflac` for cover image and `chafa` to display that image in terminal.
+
+## Roadmap
+- [ ] Multi playlist support (supporting entering more than one path at the same time)
+- [ ] Streaming spotify (but just use spotify webapp)
+- [ ] Streaming TIDAL (or you can use [tidal-dl](https://github.com/yaronzz/Tidal-Media-Downloader) download your music and play it (like me lol))
 
 ## Contributing
 
