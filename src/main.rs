@@ -6,7 +6,7 @@ use std::{
     io::{Result, Write},
     env,
     path::PathBuf,
-    // collections::HashSet
+    collections::HashSet
 };
 use walkdir::WalkDir;
 use serde::{Deserialize, Serialize};
@@ -14,12 +14,8 @@ use serde_json;
 
 #[derive(Serialize, Deserialize)]
 struct MusicConfig {
-    music_directory: String,
+    music_directories: Vec<String>,
     music_list: Vec<String>,
-    // prompt_user_for_playlist: bool, // Whether to prompt the user to choose a playlist
-    // user_playlist_choice: usize, // The user's choice of which playlist to play, 0 for all
-    // original_paths: Vec<String>, // Stores the original paths entered by the user
-    // playlists: Vec<Vec<String>>, // Now supports multiple playlists, each playlist is a Vec<String>
 }
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -36,52 +32,65 @@ fn main() -> Result<()> {
         return Ok(());
     }
 // Filter out flags and collect remaining arguments as music directories
-//
-//     let music_directories_raw: Vec<String> = args.iter()
-//         .skip(1) // Skip the program name
-//         .filter(|arg| !arg.starts_with('-'))
-//         .cloned()
-//         .collect();
-//     if debug_mode {println!("'Raw' directories will be cleaned so there are no repetitions: {:?}", music_directories_raw);}
-//
-//     let unique_music_directories: Vec<String> = music_directories_raw.into_iter()
-//      .collect::<HashSet<_>>() // Convert to HashSet to remove duplicates
-//      .into_iter() // Convert back into an Iterator
-//      .collect(); // Collect back into Vec<String>
-//     if debug_mode {println!("Cleaned directories to remove repetition{:?}",unique_music_directories);}
+    // Collecting music directories from arguments
+    let music_directories: Vec<String> = args.iter()
+        .filter(|arg| !arg.starts_with('-'))
+        .cloned()
+        .collect::<HashSet<_>>() // Remove duplicates
+        .into_iter()
+        .collect();
+    if debug_mode { println!("Using directories: {:?}", music_directories); }
 
 
-    let music_directory_arg = args.iter().find(|arg| !arg.starts_with('-')).map(|s| s.as_str());
 
-    let mut music_config = if let Some(music_directory) = music_directory_arg {
-        if debug_mode { println!("Config update: Using directory '{}'", music_directory); }
-        update_config(music_directory)?
+    // Process the directories to update configuration
+    let mut music_config = if !music_directories.is_empty() {
+        if debug_mode { println!("Config update: Using directories {:?}", music_directories); }
+        update_config(&music_directories)?
     } else {
         if debug_mode { println!("Config read: Reading existing configuration"); }
         read_music_config()?
     };
 
-    if music_config.music_list.is_empty() {
-        if debug_mode { println!("Updating music list from directory '{}'", music_config.music_directory); }
-        music_config.music_list = music_array(&music_config.music_directory)?;
+// Assuming music_array now accepts a Vec<String> and returns a combined list of files from all directories
+    if music_config.music_list.is_empty() && !music_config.music_directories.is_empty() {
+        if debug_mode { println!("Updating music list from directories {:?}", music_config.music_directories); }
+        for directory in &music_config.music_directories {
+            let music_list = music_array(directory)?;
+            music_config.music_list.extend(music_list);
+        }
         save_music_config(&music_config)?;
-    } else if debug_mode { println!("Music list loaded with {} songs", music_config.music_list.len()); }
+    } else if debug_mode {
+        println!("Music list loaded with {} songs", music_config.music_list.len());
+    }
 
     if debug_mode { println!("Playing random song"); }
 
-    play_random_song(&music_config.music_list, debug_mode, /*&config_path()*/)?;
+    play_random_song(&music_config.music_list, debug_mode)?;
 
     if debug_mode { println!("Main function completed"); }
 
     Ok(())
 }
 
-fn update_config(music_path: &str) -> Result<MusicConfig> {
-    let music_list = music_array(music_path)?;
-    let music_config = MusicConfig { music_directory: music_path.to_string(), music_list };
+fn update_config(directories: &[String]) -> Result<MusicConfig> {
+    let mut aggregated_music_list = Vec::new();
+
+    for directory in directories {
+        let music_list = music_array(directory)?;
+        aggregated_music_list.extend(music_list);
+    }
+
+    let music_config = MusicConfig {
+        music_directories: directories.to_vec(),
+        music_list: aggregated_music_list,
+    };
+
     save_music_config(&music_config)?;
+
     Ok(music_config)
 }
+
 
 fn save_music_config(music_config: &MusicConfig) -> Result<()> {
     let config_dir = config_path();
@@ -110,9 +119,16 @@ fn read_music_config() -> Result<MusicConfig> {
     let config_file = config_path().join("playlist_config.json");
     match fs::read_to_string(config_file) {
         Ok(config_string) => serde_json::from_str(&config_string).map_err(From::from),
-        Err(_) => Ok(MusicConfig { music_directory: String::new(), music_list: Vec::new() }),
+        Err(_) => Ok(MusicConfig {
+            music_directories: Vec::new(), // Ensure this matches the struct definition
+            music_list: Vec::new(),
+            // Remove or adjust any fields not present in your current MusicConfig definition
+        }),
+
     }
 }
+
+
 
 fn music_array(music_path: &str) -> Result<Vec<String>> {
     let mut music_list = Vec::new();
