@@ -15,9 +15,9 @@ use serde_json;
 
 #[derive(Serialize, Deserialize)]
 struct MusicConfig {
-    music_directories: Vec<String>,
-    music_list: Vec<String>,
-    // extension_check: bool
+   // extension_check: Vec<String>, // Stores user-specified music extensions, all music extensions are enabled by deafult
+    music_directories: Vec<String>, // Stores user-specified music directories, empty by default
+    music_list: Vec<String>, // Walkdir will put in the absolute paths to all the music files.
 }
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -33,6 +33,8 @@ fn main() -> Result<()> {
         print_help();
         return Ok(());
     }
+
+
 // Filter out flags and collect remaining arguments as music directories
     // Collecting music directories from arguments
     let music_directories: Vec<String> = args.iter()
@@ -134,7 +136,7 @@ fn read_music_config() -> Result<MusicConfig> {
 fn music_array(music_path: &str, debug_mode: bool) -> Result<Vec<String>> {
     let mut music_list = Vec::new();
     let mut non_music_files_count = 0;
-    let music_extensions = ["mp3", "flac", "wav", "m4a", "aac", /*"ogg",  unsuproted by rodio*/ "opus"];
+    let music_extensions = ["mp3", "flac", "wav", /* "m4a", "aac", "ogg",  unsuproted by rodio*/ "opus"];
 
     for entry in WalkDir::new(music_path).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
@@ -149,7 +151,6 @@ fn music_array(music_path: &str, debug_mode: bool) -> Result<Vec<String>> {
     }
 
    if debug_mode { println!("Skipped {} non-music files", non_music_files_count);}
-
     Ok(music_list)
 }
 

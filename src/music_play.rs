@@ -1,15 +1,5 @@
-use std::{fs::File,
-          io::BufReader,
-          //path::PathBuf,
-          time::Duration,
-          //sync::mpsc::Sender,
-          //path::Path,
-          process::Command,
-          sync::{/*Arc, Mutex,*/
-                 atomic::{AtomicBool, Ordering}},
-          thread,
-
-};
+use std::{fs::File, io::BufReader, time::Duration, process::Command, sync::{/*Arc, Mutex,*/
+                                                                            atomic::{AtomicBool, Ordering}}, thread, env};
 // use std::path::{PathBuf};
 //use std::io::Write;
 //use std::thread::sleep;
@@ -43,11 +33,12 @@ fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
 // }
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false);
-// Start in a play state
-static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
+static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false); // Start in a play state
 static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
+
+
 
 
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: &PathBuf*/) -> std::io::Result<()> {
@@ -110,8 +101,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     if debug_mode { println!("Cover export path is: {}", cover_output_path) }
     terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
-    //      let song_history_clone = song_history.clone();  // Clone song_history for the closure
-    //     let music_list_clone = music_list;
+
 
     #[cfg(not(target_os = "windows"))]
         let hwnd = None;
@@ -131,10 +121,6 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     };
 
     let mut controls = MediaControls::new(config).unwrap();
-
-
-        // The closure must be Send and have a static lifetime.
-        // let song_history_clone = Arc::clone(&song_history);
         controls
             .attach(
                 move |event: MediaControlEvent| match event {
@@ -190,10 +176,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
                 ..Default::default()
             })
             .unwrap();
-       // println!("TEST, {album}, {title}, {:?}", artists);
-
-
-        // test(&mut controls, title, artists, album, cover_output_path, duration);
+    
 
 
 
@@ -264,6 +247,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     }
 
 
+
     sink.sleep_until_end();
     if song_history[1].len() >= 1 {
         let randint = song_history[1][song_history[1].len()-1];
@@ -274,7 +258,6 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
         random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
     }
     // Logic to skip to the next track, adjust `current_index` as needed
-
 
 // The sound plays in a separate thread. This call will block the current thread until the sink
 // has finished playing all its queued sounds.
