@@ -16,6 +16,7 @@ use serde_json;
 struct MusicConfig {
     music_directories: Vec<String>,
     music_list: Vec<String>,
+    // extension_check: bool
 }
 
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
@@ -56,7 +57,7 @@ fn main() -> Result<()> {
     if music_config.music_list.is_empty() && !music_config.music_directories.is_empty() {
         if debug_mode { println!("Updating music list from directories {:?}", music_config.music_directories); }
         for directory in &music_config.music_directories {
-            let music_list = music_array(directory)?;
+            let music_list = music_array(directory, debug_mode)?;
             music_config.music_list.extend(music_list);
         }
         save_music_config(&music_config)?;
@@ -129,17 +130,28 @@ fn read_music_config() -> Result<MusicConfig> {
 }
 
 
-
-fn music_array(music_path: &str) -> Result<Vec<String>> {
+fn music_array(music_path: &str, debug_mode: bool) -> Result<Vec<String>> {
     let mut music_list = Vec::new();
+    let mut non_music_files_count = 0;
+    let music_extensions = ["mp3", "flac", "wav", "m4a", "aac", /*"ogg",  unsuproted by rodio*/ "opus"];
+
     for entry in WalkDir::new(music_path).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
         if path.is_file() {
-            music_list.push(path.to_string_lossy().into_owned());
+            match path.extension().and_then(|ext| ext.to_str()) {
+                Some(ext) if music_extensions.contains(&ext) => {
+                    music_list.push(path.to_string_lossy().into_owned());
+                },
+                _ => non_music_files_count += 1,
+            }
         }
     }
-    Ok(music_list) // Directly return an Ok variant of Result with music_list
+
+   if debug_mode { println!("Skipped {} non-music files", non_music_files_count);}
+
+    Ok(music_list)
 }
+
 
 fn print_help() {
     println!("{} Help Menu",PACKAGE_NAME);
