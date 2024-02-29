@@ -103,7 +103,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     // Construct the path to the directory where the .jpg files are located
 
 
-    let cover_output_path = format!("/tmp/{}cover-{}.jpg",PACKAGE_NAME, album);
+    let cover_output_path = format!("/tmp/{}-cover-{}.jpg",PACKAGE_NAME, randint);
     let cover_output_path_clone = cover_output_path.clone();
 
 

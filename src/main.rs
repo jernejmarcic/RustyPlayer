@@ -12,6 +12,7 @@ use walkdir::WalkDir;
 use serde::{Deserialize, Serialize};
 use serde_json;
 
+
 #[derive(Serialize, Deserialize)]
 struct MusicConfig {
     music_directories: Vec<String>,
@@ -47,7 +48,7 @@ fn main() -> Result<()> {
     // Process the directories to update configuration
     let mut music_config = if !music_directories.is_empty() {
         if debug_mode { println!("Config update: Using directories {:?}", music_directories); }
-        update_config(&music_directories)?
+        update_config(&music_directories, debug_mode)?
     } else {
         if debug_mode { println!("Config read: Reading existing configuration"); }
         read_music_config()?
@@ -74,11 +75,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn update_config(directories: &[String]) -> Result<MusicConfig> {
+fn update_config(directories: &[String], debug_mode: bool) -> Result<MusicConfig> {
     let mut aggregated_music_list = Vec::new();
 
     for directory in directories {
-        let music_list = music_array(directory)?;
+        let music_list = music_array(directory, debug_mode)?;
         aggregated_music_list.extend(music_list);
     }
 

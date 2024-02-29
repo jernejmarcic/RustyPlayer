@@ -1182,6 +1182,7 @@ dependencies = [
  "audiotags",
  "clap",
  "clearscreen",
+ "log",
  "rand",
  "rodio",
  "serde",
