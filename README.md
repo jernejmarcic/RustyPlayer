@@ -108,7 +108,7 @@ Rustyplayer uses `rodio` for audio playback, `audiotags` for metadata handling, 
 In addition, is uses `metflac` for cover image and `chafa` to display that image in terminal.
 
 ## Roadmap
-- [ ] Multi playlist support (supporting entering more than one path at the same time)
+- [x] Multi playlist support (supporting entering more than one path at the same time)
 - [ ] Streaming spotify (but just use spotify webapp)
 - [ ] Streaming TIDAL (or you can use [tidal-dl](https://github.com/yaronzz/Tidal-Media-Downloader) download your music and play it (like me lol))
 - [ ] Streaming Youtube Music,(or you can just download music with [yt-dlp](https://github.com/yt-dlp/yt-dlp))
