@@ -61,7 +61,7 @@ You can move the binary wherever you want but if you got this far it seems you u
 
 Use the path argument only when you want to change the music directory. Rustyplayer remembers your last-used directory and automatically plays from it on subsequent launches.
 
-### Screenshots
+## Screenshots
 
 Entering the path to the music folder:
 
