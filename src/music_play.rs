@@ -1,36 +1,9 @@
-use std::{fs::File, io::BufReader, time::Duration, process::Command, sync::{/*Arc, Mutex,*/
-                                                                            atomic::{AtomicBool, Ordering}}, thread, env};
-// use std::path::{PathBuf};
-//use std::io::Write;
-//use std::thread::sleep;
+use std::{fs::File, io::BufReader, time::Duration, process::Command, sync::{/*Arc, Mutex,*/atomic::{AtomicBool, Ordering}}, thread, env};
 use rand::Rng;
 use rodio::{Decoder, OutputStream, Sink};
 use audiotags::{Tag};
-// use termion::event::{Key, parse_event};
-// use dbus::{blocking::Connection, channel::MatchingReceiver, message::MatchRule};
-// use dbus::blocking::stdintf::org_freedesktop_dbus::EmitsChangedSignal::False;
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
 
-
-// This just basically changes the duration from Option<Duration> to Option<f64> which is
-fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
-    option_seconds.map(|secs| Duration::from_secs_f64(secs))
-}
-
-// fn test(controls: &mut MediaControls, title: &str, artists: String, album: &str, cover_output_path: String, duration: Option<Duration>) {
-//     println!("TEST, {album}, {title}, {:?}", artists);
-//     controls
-//         .set_metadata(MediaMetadata {
-//             title: Some(title),
-//             artist: Some(&*artists),
-//             album: Some(album),
-//             duration: duration,
-//             cover_url: Some(&*format!("file://{}", cover_output_path)),
-//             ..Default::default()
-//         })
-//         .unwrap();
-//     println!("TEST, {album}, {title}, {:?}", artists);
-// }
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false);
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false); // Start in a play state
@@ -38,8 +11,9 @@ static SHOULD_SKIP: AtomicBool = AtomicBool::new(false);
 static SHOULD_PLAY_PREVIOUS: AtomicBool = AtomicBool::new(false);
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 
-
-
+fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
+    option_seconds.map(|secs| Duration::from_secs_f64(secs))
+}
 
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: &PathBuf*/) -> std::io::Result<()> {
     if music_list.is_empty() {
@@ -49,7 +23,7 @@ pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, confi
 
     let mut song_history: Vec<Vec<usize>> = vec![vec![], vec![]]; // Initialize with two empty rows
 
-    println!(" Song history {:?}", song_history);
+    // println!("Song history {:?}", song_history);
     random_passer(music_list, debug_mode, &mut song_history, /*&    mut rng*/);
     Ok(())
 }
@@ -58,23 +32,23 @@ fn random_passer(music_list: &[String], debug_mode: bool, song_history: &mut Vec
     let mut rng = rand::thread_rng();
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
-    let randint = rng.gen_range(0..music_list.len());
-    if debug_mode{println!("Number genereated: {}", randint)}
-    song_history[0].push(randint);  // Track played songs
-    music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
+    let song_index = rng.gen_range(0..music_list.len());
+    if debug_mode{println!("Number genereated: {}", song_index)}
+    song_history[0].push(song_index);  // Track played songs
+    music_player(music_list, debug_mode,song_history, song_index/*&mut rng*/);
 }
 
-fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<Vec<usize>>, randint: usize) {
-    if debug_mode { println!("Playing song number: {}", randint) }
+fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<Vec<usize>>, song_index: usize) {
+    if debug_mode { println!("Playing song number: {}", song_index) }
     if debug_mode { println!("Song numbers played: {:?}", song_history) }
-    if debug_mode { println!("Playing song file: {}", music_list[randint]); }
+    if debug_mode { println!("Playing song file: {}", music_list[song_index]); }
     // println!("Played songs index: {:?}", song_history);
     // Get an output stream handle to the default physical sound device
     let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-    let file = BufReader::new(File::open(&music_list[randint]).unwrap());
+    let file = BufReader::new(File::open(&music_list[song_index]).unwrap());
     let sink = Sink::try_new(&stream_handle).unwrap();
 
-    let tag = Tag::new().read_from_path(&music_list[randint]).unwrap();
+    let tag = Tag::new().read_from_path(&music_list[song_index]).unwrap();
     let title = tag.title().unwrap_or_else(|| "Unknown".into());
     //       let album_cover = tag.album_cover();
     let duration_seconds: Option<f64> = tag.duration();  // Example duration in miliseconds
@@ -94,14 +68,12 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     // Construct the path to the directory where the .jpg files are located
 
 
-    let cover_output_path = format!("/tmp/{}-cover-{}.jpg",PACKAGE_NAME, randint);
+    let cover_output_path = format!("/tmp/{}-cover-{}.jpg",PACKAGE_NAME, song_index);
     let cover_output_path_clone = cover_output_path.clone();
 
 
     if debug_mode { println!("Cover export path is: {}", cover_output_path) }
-    terminal_ui(&music_list, randint, title, album, artists.clone(), debug_mode, cover_output_path_clone);
-
-
+    terminal_ui(&music_list, song_index, title, album, artists.clone(), debug_mode, cover_output_path_clone);
 
     #[cfg(not(target_os = "windows"))]
         let hwnd = None;
@@ -121,6 +93,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     };
 
     let mut controls = MediaControls::new(config).unwrap();
+
         controls
             .attach(
                 move |event: MediaControlEvent| match event {
@@ -152,10 +125,8 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
 
                     MediaControlEvent::Previous => {
                         if debug_mode { println!("{:?} event received via MPRIS", event) }
-                        //  println!("Well you clicked {:?} but I didn't really code that in yet cuz I can't be bothered to LOL", event);
                         SHOULD_PLAY_PREVIOUS.store(true, Ordering::SeqCst);
-                        // TODO: Well make it work. LOL
-                        // If only it was not so FUCKING HARD.
+
                     }
 
 
@@ -164,18 +135,20 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
                 })
             .unwrap();
 
+    controls
+        .set_metadata(MediaMetadata {
+            title: Some(title),
+            artist: Some(&*artists),
+            album: Some(album),
+            duration: duration,
+            cover_url: Some(&*format!("file://{}", cover_output_path)),
+            ..Default::default()
+        })
+        .unwrap();
+
 
     //    println!("TEST, {album}, {title}, {:?}", artists);
-        controls
-            .set_metadata(MediaMetadata {
-                title: Some(title),
-                artist: Some(&*artists),
-                album: Some(album),
-                duration: duration,
-                cover_url: Some(&*format!("file://{}", cover_output_path)),
-                ..Default::default()
-            })
-            .unwrap();
+
     
 
 
@@ -212,9 +185,9 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
             sink.clear();
 
             if song_history[1].len() >= 1 {
-                let randint = song_history[1][song_history[1].len()-1];
+                let song_index = song_history[1][song_history[1].len()-1];
                 song_history[1].pop();
-                music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
+                music_player(music_list, debug_mode,song_history, song_index/*&mut rng*/);
 
             } else {
                 random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
@@ -230,10 +203,10 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
             // Logic to play the previous track, adjust `current_index` as needed
             if song_history[0].len() >= 2 {
                 sink.clear();
-                song_history[1].push(randint);
-                let randint = song_history[0][song_history[0].len()-2];
+                song_history[1].push(song_index);
+                let song_index = song_history[0][song_history[0].len()-2];
                 song_history[0].pop();
-                music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
+                music_player(music_list, debug_mode,song_history, song_index/*&mut rng*/);
             } else {
                 println!("Not enough songs in the play queue")
             }
@@ -250,9 +223,9 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
 
     sink.sleep_until_end();
     if song_history[1].len() >= 1 {
-        let randint = song_history[1][song_history[1].len()-1];
+        let song_index = song_history[1][song_history[1].len()-1];
         song_history[1].pop();
-        music_player(music_list, debug_mode,song_history, randint/*&mut rng*/);
+        music_player(music_list, debug_mode,song_history, song_index/*&mut rng*/);
 
     } else {
         random_passer(music_list, debug_mode,song_history, /*&mut rng*/);
@@ -301,13 +274,13 @@ fn display_full_image_with_chafa(image_path: String) -> Result<(), std::io::Erro
     }
 }
 
-fn terminal_ui(music_list: &[String], randint: usize, title: &str, artists: &str, album: String, debug_mode: bool, cover_output_path: String) {
+fn terminal_ui(music_list: &[String], song_index: usize, title: &str, artists: &str, album: String, debug_mode: bool, cover_output_path: String) {
     if !debug_mode { clearscreen::clear().expect("Failed to clear screen"); }
 
     let flac_checker = ".flac";
 
-    if music_list[randint].contains(flac_checker) {
-        match extract_cover_from_flac(&music_list[randint], cover_output_path.clone()) {
+    if music_list[song_index].contains(flac_checker) {
+        match extract_cover_from_flac(&music_list[song_index], cover_output_path.clone()) {
             Ok(_) => {
                 if let Ok(_) = display_full_image_with_chafa(cover_output_path) {
                     // Successfully displayed the image

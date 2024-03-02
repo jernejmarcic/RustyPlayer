@@ -78,7 +78,7 @@ Rustyplayer showing the album cover, and information abot the playing song:
 
 - [x] **Previous Track Logic**: Even though the foundation exists, implementing logic to play the previous track has been VERY F****** HARD. This involves managing song indexes and ensuring seamless playback transition.
 - [ ] **Cross-Platform Support**: Extend compatibility to Windows and Mac. Some features might already work, but comprehensive testing and development are needed to ensure full functionality across different operating systems.
-- [x] **Art URL Improvement**: Currently, the album art URL is static. The goal is to dynamically generate this URL, ensuring it accurately reflects the currently playing track's album art across all platforms.
+- [ ] **Art URL Improvement**: Currently, the album art URL is static. The goal is to dynamically generate this URL, ensuring it accurately reflects the currently playing track's album art across all platforms.
 - [ ] **Config Enhancements**: Plans are in place to refine the configuration process, particularly by adhering to the XDG Base Directory specifications on Linux. Similar standards will be considered for Windows and Mac to streamline user settings and data management but IDK if Windows even has any standards for configration files.
 - [ ] **Additional Features and Fixes**: Continuous effort to enhance the user interface, integrate more robust MPRIS support, and overall improve the codebase for better performance and user experience.
 
@@ -99,6 +99,7 @@ In addition, is uses `metflac` for cover image and `chafa` to display that image
 - [ ] Multi playlist support (supporting entering more than one path at the same time)
 - [ ] Streaming spotify (but just use spotify webapp)
 - [ ] Streaming TIDAL (or you can use [tidal-dl](https://github.com/yaronzz/Tidal-Media-Downloader) download your music and play it (like me lol))
+- [ ] Streaming Youtube Music,(or you can just download music with [yt-dlp](https://github.com/yt-dlp/yt-dlp))
 
 ## Contributing
 

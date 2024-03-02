@@ -1,6 +1,5 @@
 mod music_play;
 use music_play::play_random_song;
-
 use std::{
     fs::{self, OpenOptions},
     io::{Result, Write},
@@ -64,9 +63,7 @@ fn main() -> Result<()> {
             music_config.music_list.extend(music_list);
         }
         save_music_config(&music_config)?;
-    } else if debug_mode {
-        println!("Music list loaded with {} songs", music_config.music_list.len());
-    }
+    } else if debug_mode { println!("Music list loaded with {} songs", music_config.music_list.len()); }
 
     if debug_mode { println!("Playing random song"); }
 
@@ -158,12 +155,13 @@ fn music_array(music_path: &str, debug_mode: bool) -> Result<Vec<String>> {
 fn print_help() {
     println!("{} Help Menu",PACKAGE_NAME);
     println!("Usage: {} [OPTIONS] [MUSIC_DIRECTORY]", PACKAGE_NAME);
+    println!("Usage extended: {} [OPTIONS] [MUSIC_DIRECTORY 1] [MUSIC_DIRECTORY 2]", PACKAGE_NAME);
     println!("");
     println!("Options:");
     println!("  -h, --help       Display this help menu and exit");
     println!("  -d, --debug      Run the program in debug mode to display additional information and prevents the terminal screen from clearing");
     println!("");
-    println!("MUSIC_DIRECTORY is an optional argument. If provided, {} will use this directory to update the music library.", PACKAGE_NAME);
+    println!("MUSIC_DIRECTORY is an optional argument, there can be multiple. If provided, {} will use this directory to update the music library.", PACKAGE_NAME);
     // println!("Your current music path is set to: {}",music_directory);
     println!("Configuration is located at: {}", config_path().display());
     println!("_________________________________________________");
