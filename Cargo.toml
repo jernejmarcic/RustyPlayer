@@ -2,6 +2,14 @@
 name = "rustyplayer"
 version = "0.9.9"
 edition = "2021"
+authors = ["Jernej Marcic jernej.marcic@protonmail.com"]
+license = "GPL-3.0"
+description = "A simple music player that can play your music files"
+readme = "README.md"
+homepage = "https://github.com/jernejmarcic/RustyPlayer"
+repository = "https://github.com/jernejmarcic/RustyPlayer"
+keywords = ["cli", "music"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,7 +21,7 @@ clearscreen = "2.0.1"
 # mpsc = "0.2.0"
 rand = "0.8.5"
 rodio = "0.17.1"
-souvlaki = "0.7.3"
+souvlaki = { version = "0.7.3", default-features = false, features = ["use_dbus"] }
 # symphonia = "0.5.3"
 walkdir = "2.3.3"
 clap = "4.4.18"
