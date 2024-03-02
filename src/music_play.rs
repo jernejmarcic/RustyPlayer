@@ -82,7 +82,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
         let hwnd = {
         use raw_window_handle::windows::WindowsHandle;
 
-        let handle: WindowsHandle = unimplemented!();
+        let handle: WindowsHandle;
         Some(handle.hwnd)
     };
 
