@@ -2,34 +2,29 @@
 name = "rustyplayer"
 version = "0.9.9"
 edition = "2021"
-authors = ["Jernej Marcic jernej.marcic@protonmail.com"]
+authors = ["Jernej Marcic <jernej.marcic@protonmail.com>"]
 license = "GPL-3.0"
 description = "A simple music player that can play your music files"
 readme = "README.md"
 homepage = "https://github.com/jernejmarcic/RustyPlayer"
 repository = "https://github.com/jernejmarcic/RustyPlayer"
-keywords = ["cli", "music"]
+documentation = "https://github.com/jernejmarcic/RustyPlayer#readme"
+keywords = ["cli", "music", "audio-player", "media-player", "open-source"]
 categories = ["command-line-utilities"]
+publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 audiotags = "0.5.0"
 clearscreen = "2.0.1"
-# dbus = "0.9.7"
-# metaflac = "0.2.5"
-# mpsc = "0.2.0"
 rand = "0.8.5"
 rodio = "0.17.1"
 souvlaki = { version = "0.7.3", default-features = false, features = ["use_dbus"] }
-# symphonia = "0.5.3"
 walkdir = "2.3.3"
-clap = "4.4.18"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
-log = "0.4.20"
-# rspotify = "0.12.0"
-# dirs = "5.0.1"
-# directories = "5.0.1"
 
+[badges]
+maintenance = { status = "actively-developed" }
 

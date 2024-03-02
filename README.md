@@ -8,43 +8,55 @@ if you have any more issue please report them
 
 ## Installation
 
-### Debian-based Distributions (Ubuntu, Debian, etc.)
+### Install dependancies:
+#### Debian-based Distributions (Ubuntu, Debian, etc.)
 
 ```bash
 sudo apt-get update
 sudo apt-get install chafa metaflac
 ```
 
-### RedHat/Fedora
+#### RedHat/Fedora
 
 ```bash
 sudo dnf install chafa metaflac
 ```
 
-### Arch-based Distributions (Arch Linux, Endeavour OS, Manjaro, etc.)
+#### Arch-based Distributions (Arch Linux, Endeavour OS, Manjaro, etc.)
 
 ```bash
 sudo pacman -S chafa metaflac
 ```
 
-### General Installation Steps
+### Install program:
+#### Install with cargo (recommended):
+```shell
+cargo install --git https://github.com/jernejmarcic/RustyPlayer
+```
 
-After installing the dependencies:
 
+#### Install through GitHub:
 ```bash
 git clone https://github.com/jernejmarcic/RustyPlayer.git
 cd RustyPlayer
 cargo build --release
 ```
 
-## Usage
+## Usage:
+### If install through cargo:
+```shell
+rustyplayer /path/to/your/music/directory
+```
+Use the path argument only when you want to change the music directory. Rustyplayer remembers your last-used directory and automatically plays from it on subsequent launches.
 
-Run Rustyplayer with the path to your music directory:
+
+
+### If install through GitHub
+Run RustyPlayer with the path to your music directory:
 
 ```bash
 ./target/release/rustyplayer /path/to/your/music/directory
 ```
-
 You can move the binary wherever you want but if you got this far it seems you understand computers well enough
 
 Use the path argument only when you want to change the music directory. Rustyplayer remembers your last-used directory and automatically plays from it on subsequent launches.
