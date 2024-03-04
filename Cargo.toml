@@ -25,6 +25,7 @@ souvlaki = "0.7.3"
 walkdir = "2.3.3"
 serde = { version = "1.0.196", features = ["derive"] }
 serde_json = "1.0.113"
+raw-window-handle = "0.6.0"
 
 [badges]
 maintenance = { status = "actively-developed" }

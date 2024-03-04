@@ -1,4 +1,3 @@
-# FOUND MEMORY LEAK IN PROGRAM DO NOT INSTALL (well you can still install the program just easts 10mb of memory per song played)
 # Rustyplayer
 
 Rustyplayer is a basic, functioning music listener written in Rust. It is my first serious Rust project and my most usefull coding project in general.
