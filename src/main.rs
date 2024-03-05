@@ -66,10 +66,7 @@ fn main() -> Result<()> {
         println!("Music list loaded with {} songs", music_config.music_list.len());
     }
 
-    if debug_mode {
-        println!("Playing random song");
-    }
-
+    if debug_mode { println!("Playing random song"); }
     // Play a random song from the music list.
     play_random_song(&music_config.music_list, debug_mode)?;
 

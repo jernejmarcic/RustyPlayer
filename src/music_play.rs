@@ -71,7 +71,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
 // Open the audio file from the list at the given index and wrap it in a buffered reader.
     let file = BufReader::new(File::open(&music_list[song_index]).unwrap());
 // Create a new audio sink attached to the audio output stream for playing sound.
-    let mut sink = Sink::try_new(&stream_handle).unwrap();
+    let sink = Sink::try_new(&stream_handle).unwrap();
 // Decode the audio file for playback.
     let source = Decoder::new(file).unwrap();
 // Append the decoded audio source to the sink for playback.
@@ -256,13 +256,13 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
 
     sink.sleep_until_end();
 
-    // if song_history[1].len() >= 1 {
-    //     let song_index = song_history[1][song_history[1].len() - 1];
-    //     song_history[1].pop();
-    //     music_player(music_list, debug_mode, song_history, song_index/*&mut rng*/);
-    // } else {
-    //     random_passer(music_list, debug_mode, song_history);
-    // }
+    if song_history[1].len() >= 1 {
+        let song_index = song_history[1][song_history[1].len() - 1];
+        song_history[1].pop();
+        music_player(music_list, debug_mode, song_history, song_index/*&mut rng*/);
+    } else {
+        random_passer(music_list, debug_mode, song_history);
+    }
 }
 
 
