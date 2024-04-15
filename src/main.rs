@@ -187,7 +187,7 @@ fn music_array(music_path: &str, debug_mode: bool) -> Result<Vec<String>> {
     Ok(music_list) // Return the list of music file paths.
 }
 
-// Well its a help message I don't think an explanation is needed
+// Well it's a help message I don't think an explanation is needed
 fn print_help() {
     println!("{} Help Menu",PACKAGE_NAME);
     println!("Usage: {} [OPTIONS] [MUSIC_DIRECTORY]", PACKAGE_NAME);

@@ -10,7 +10,7 @@ use rand::{Rng};
 use rodio::{Decoder, OutputStream, Sink};
 use audiotags::{Tag};
 use souvlaki::{MediaControlEvent, MediaControls, MediaMetadata, PlatformConfig};
-
+use async_recursion::async_recursion;
 
 static IS_PAUSED: AtomicBool = AtomicBool::new(false);
 static LAST_PAUSED_STATE: AtomicBool = AtomicBool::new(false);
@@ -23,20 +23,12 @@ fn convert_to_duration(option_seconds: Option<f64>) -> Option<Duration> {
     option_seconds.map(|secs| Duration::from_secs_f64(secs))
 }
 
-fn randomizer(music_list: &[String]) -> usize {
-    let mut rng = rand::thread_rng();
-    return rng.gen_range(0..music_list.len());
-}
-
 pub(crate) fn play_random_song(music_list: &[String], debug_mode: bool /*, config_path: */) -> std::io::Result<()> {
     if music_list.is_empty() {
         println!("No songs found in the specified directory.");
         return Ok(());
     }
-
     let mut song_history: Vec<Vec<usize>> = vec![vec![], vec![]]; // Initialize with two empty rows
-
-
     // println!("Song history {:?}", song_history);
     random_passer(music_list, debug_mode, &mut song_history);
     Ok(())
@@ -46,18 +38,18 @@ fn random_passer(music_list: &[String], debug_mode: bool, song_history: &mut Vec
 
 //    let mut last_paused_state = IS_PAUSED.load(Ordering::SeqCst);
     //       let current_paused_state = IS_PAUSED.load(Ordering::SeqCst);
+loop {
+    let mut rng = rand::thread_rng();
+    let song_index = rng.gen_range(0..music_list.len());
+    if debug_mode { println!("Number genereated: {}", song_index) }
+    song_history[0].push(song_index);  // Track played songs
+    println!("Song numbers played after finish: {:?}", song_history);
+    music_player(music_list, debug_mode, song_history, song_index/*&mut rng*/);
 
-    loop {
-        let mut rng = rand::thread_rng();
-        let song_index = randomizer(music_list);
-        if debug_mode { println!("Number genereated: {}", song_index) }
-        song_history[0].push(song_index);  // Track played songs
-        music_player(music_list, debug_mode, song_history, song_index/*&mut rng*/);
-    }
+}
 }
 
 // while !sink.empty() && !SHOULD_SKIP.load(Ordering::SeqCst) && !SHOULD_PLAY_PREVIOUS.load(Ordering::SeqCst) {
-
 
 fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<Vec<usize>>, song_index: usize) {
     if debug_mode { println!("Playing song number: {}", song_index) }
@@ -96,15 +88,13 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
 
 // Construct the path to the directory where the .jpg files are located
     let cover_output_path = format!("/tmp/{}-cover-{}.jpg", PACKAGE_NAME, song_index);
-    let cover_output_path_clone = cover_output_path.clone();
-
 
     if debug_mode { println!("Cover export path is: {}", cover_output_path) }
-    terminal_ui(&music_list, song_index, title, album, artists.clone(), debug_mode, cover_output_path_clone);
+    terminal_ui(&music_list, song_index, title, album, artists.clone(), debug_mode, cover_output_path.clone());
 
     if song_history[0].len() >= 2 {
         let path_to_file = format!("/tmp/{}-cover-{}.jpg", PACKAGE_NAME, song_history[0][song_history[0].len() - 2]); // Hahahaha this shit si going to be so fucking confusing in like 2 days
-        println!("{path_to_file}");
+       if debug_mode { println!("{path_to_file}");}
 
         // Attempt to delete the file
         fs::remove_file(path_to_file);
@@ -241,7 +231,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
                 // Remove the last entry in the current song history.
                 song_history[0].pop();
                 // Play the previous track.
-                return music_player(music_list, debug_mode, song_history, song_index);
+                music_player(music_list, debug_mode, song_history, song_index);
             } else {
                 // If there are not enough songs in the history, notify the user.
                 println!("Not enough songs in the play queue");
@@ -259,9 +249,7 @@ fn music_player(music_list: &[String], debug_mode: bool, song_history: &mut Vec<
     if song_history[1].len() >= 1 {
         let song_index = song_history[1][song_history[1].len() - 1];
         song_history[1].pop();
-        music_player(music_list, debug_mode, song_history, song_index/*&mut rng*/);
-    } else {
-        random_passer(music_list, debug_mode, song_history);
+        music_player(music_list, debug_mode, song_history, song_index);
     }
 }
 
